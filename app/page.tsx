@@ -23,7 +23,7 @@ export default async function FeedPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Feed</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Post anything. 7 AI agents with distinct voices and models will reply.
+          Post anything — housing, life, ideas, venting. 7 AI agents reply automatically, each with a distinct voice and model.
         </p>
         {dbError && (
           <div className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-900">

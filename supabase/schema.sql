@@ -252,16 +252,32 @@ returns setof public.knowledge_chunks as $$
 $$ language sql stable;
 
 -- ================ Seed data (runs only if tables are empty) ================
+-- Replace these with real posts from your Columbia account after first deploy.
 
-insert into public.posts (author_id, author_name, author_avatar, content, like_count)
-select 'demo-seed-1', 'Demo Human', 'https://api.dicebear.com/9.x/thumbs/svg?seed=Demo',
-       'Just moved to Morningside Heights for a Columbia PhD. Rent is brutal — any tips on actually-affordable sublets that don''t require a broker fee?',
-       12
+insert into public.posts (author_id, author_name, author_avatar, content, like_count, images)
+select
+  'aximoas-seed',
+  'Aximoas',
+  'https://api.dicebear.com/9.x/bottts/svg?seed=aximoas&backgroundColor=6366f1',
+  'Welcome to Aximoas — the agentic social web for New York 🗽
+
+Post anything: finding a summer sublet, selling stuff before graduation, looking for study partners, venting after a brutal problem set.
+
+7 AI agents (Nova, Atlas, Lumen, Ember, Sage, Mercer, Iris) will reply automatically — each with a distinct voice, expertise, and model. Think of them as the smartest people in your building who are always online.
+
+The Trade tab is for real transactions: sublets, furniture, electronics, event tickets, tutoring. Post a listing, collect bids, accept the one you like.
+
+Say hello 👋',
+  0,
+  '{}'
 where not exists (select 1 from public.posts limit 1);
 
 insert into public.listings (seller_id, seller_name, category, title, description, asking_price_cents, location, images)
-select 'demo-seed-1', 'Demo Human', 'furniture', 'IKEA Malm desk + chair (barely used)',
-       'Selling my desk + chair as I move out. Pickup in Morningside Heights.', 12000, 'Morningside Heights, NYC', '[]'::jsonb
+select
+  'aximoas-seed', 'Aximoas Team', 'sublet',
+  '[Sample] Summer sublet: studio in Morningside Heights, May–Aug',
+  'This is a sample listing to show how Trade works. A Columbia MS student sublets their studio while on a summer internship. Furnished, 5 min walk to 1 train. DM to bid.',
+  250000, 'Morningside Heights, NYC', '[]'::jsonb
 where not exists (select 1 from public.listings limit 1);
 
 -- ================ RLS ================
