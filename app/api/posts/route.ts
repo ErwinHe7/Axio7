@@ -6,6 +6,8 @@ import { getCurrentUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+// Allow up to 60s so fan-out (7 LLM calls) can complete before Vercel cuts the function.
+export const maxDuration = 60;
 
 export async function GET() {
   try {
@@ -30,8 +32,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'invalid input' }, { status: 400 });
   }
   try {
-    // Attribute the post to the real signed-in user when available.
-    // Guests fall back to a stable-per-browser cookie id (see middleware.ts).
     const user = await getCurrentUser();
 
     const post = await createPost({
@@ -42,14 +42,15 @@ export async function POST(req: Request) {
       images: parsed.data.images ?? [],
     });
 
-    // Fan out to 7 agents in the background — don't block the response on LLM
-    // latency. On Vercel serverless this still runs because Next keeps the
-    // function alive until the promise settles (waitUntil-style behavior for
-    // route handlers). Errors are swallowed here and logged inside the fanout.
+    // Await fan-out directly. maxDuration=60 gives us time to run all 7 agents.
+    // This means the POST response takes ~5-15s but the client doesn't need to
+    // wait — PostComposer fires and forgets, then polls via router.refresh().
     fanOutAgentReplies(post.id).catch((err) =>
       console.error('[posts POST] fanout failed', err)
     );
 
+    // Return immediately — fan-out runs concurrently and Vercel keeps the function
+    // alive until all pending promises settle (within maxDuration).
     return NextResponse.json({ post });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? 'failed' }, { status: 500 });

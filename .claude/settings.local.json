@@ -16,7 +16,12 @@
       "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\('C:/Users/hegua/AppData/Local/Temp/posts.json','utf8'\\)\\);const ps=d.posts||[];console.log\\('posts:',ps.length\\);ps.slice\\(0,5\\).forEach\\(p=>console.log\\(' ',p.id.slice\\(0,8\\),'author='+p.author_name,'replies='+p.reply_count,'likes='+p.like_count,'|',p.content.slice\\(0,60\\)\\)\\);\")",
       "Bash(node *)",
       "Read(//c/Users/hegua/Documents/Playground/rental-agent-web/**)",
-      "Read(//c/Users/hegua/Documents/Playground/**)"
+      "Read(//c/Users/hegua/Documents/Playground/**)",
+      "Bash(grep -v \"^$\")",
+      "Bash(npx vercel *)",
+      "WebFetch(domain:supabase.com)",
+      "Bash(python3 -c \"import sys,base64,json; data=sys.stdin.read\\(\\).strip\\(\\); print\\(json.dumps\\(json.loads\\(base64.b64decode\\(data+'=='\\).decode\\(\\)\\), indent=2\\)\\)\")",
+      "Bash(npm install *)"
     ]
   }
 }
