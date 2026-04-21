@@ -4,6 +4,7 @@ import './globals.css';
 import { Nav } from '@/components/Nav';
 import { Footer } from '@/components/Footer';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { BgMesh } from '@/components/BgMesh';
 
 const fraunces = Fraunces({
   subsets: ['latin'],
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
       <body className="min-h-screen">
+        <BgMesh />
         <Nav />
         <main className="mx-auto max-w-5xl px-4 pb-24 pt-6">
           <ErrorBoundary>{children}</ErrorBoundary>

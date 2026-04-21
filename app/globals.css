@@ -1,44 +1,74 @@
 @tailwind base;
-@tailwind components;
 @tailwind utilities;
+@tailwind components;
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  --molt-shell:  #D84727;
-  --molt-ocean:  #0B4F6C;
-  --molt-sand:   #F7F0E8;
-  --molt-coral:  #F9B5A4;
-  --molt-kelp:   #4A7C59;
+  --bg-deep:      #0A1520;
+  --bg-surface:   #0F1E2D;
+  --molt-ocean:   #0B4F6C;
+  --molt-shell:   #D84727;
+  --molt-coral:   #F9B5A4;
+  --molt-sand:    #F7F0E8;
+  --molt-kelp:    #4A7C59;
+  --glass:        rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --glow-shell:   rgba(216,71,39,0.35);
+  --glow-ocean:   rgba(11,79,108,0.40);
 
   --font-fraunces: 'Fraunces', Georgia, serif;
   --font-inter: 'Inter', system-ui, sans-serif;
 }
 
-html,
-body {
+html, body {
   height: 100%;
-  background: var(--molt-sand);
-  color: var(--molt-ocean);
+  background: var(--bg-deep);
+  color: var(--molt-sand);
   font-family: var(--font-inter);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.font-fraunces {
-  font-family: var(--font-fraunces);
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
+
+.font-fraunces { font-family: var(--font-fraunces); }
 
 /* MapLibre tweaks */
-.maplibregl-ctrl-attrib {
-  font-size: 10px;
-}
+.maplibregl-ctrl-attrib { font-size: 10px; }
 
 /* Realtime new-post slide-in */
 @keyframes slideIn {
   from { opacity: 0; transform: translateY(-12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.animate-slide-in {
-  animation: slideIn 0.35s ease-out;
+.animate-slide-in { animation: slideIn 0.35s ease-out; }
+
+/* Background mesh animations */
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(40px, -30px) scale(1.05); }
+  66%       { transform: translate(-20px, 20px) scale(0.97); }
+}
+@keyframes drift-reverse {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-30px, 20px) scale(1.03); }
+  66%       { transform: translate(25px, -15px) scale(0.98); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(-8px); }
+  50%       { transform: translateY(8px); }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
