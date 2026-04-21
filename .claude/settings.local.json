@@ -25,7 +25,8 @@
       "WebFetch(domain:ai6666.com)",
       "WebFetch(domain:erwinhe7.github.io)",
       "Read(//mnt/c/Users/hegua/Desktop/StartupProduct/AgenticWorld/**)",
-      "Bash(npm list *)"
+      "Bash(npm list *)",
+      "Bash(pkill -f \"next start\")"
     ]
   }
 }

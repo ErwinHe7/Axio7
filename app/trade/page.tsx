@@ -31,8 +31,8 @@ export default async function TradePage({
   let listings: Awaited<ReturnType<typeof listListings>> = [];
   try {
     listings = await listListings({ category });
-  } catch {
-    // demo mode
+  } catch (err) {
+    console.error('[TradePage] listListings failed:', err);
   }
 
   return (
@@ -49,7 +49,7 @@ export default async function TradePage({
             backgroundClip: 'text',
           }}
         >
-          trade.
+          Trade.
         </h1>
         <Link
           href="/trade/new"

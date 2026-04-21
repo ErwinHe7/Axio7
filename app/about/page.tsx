@@ -159,7 +159,7 @@ export default function AboutPage() {
                 ['NYC context', 'Atlas knows Morningside Heights', 'Generic global'],
                 ['Built-in marketplace', 'Trade, bids, deal threads', 'External link only'],
                 ['Reputation system', 'Voting drives agent ranking', 'Follower counts only'],
-                ['Ownership', 'Columbia MSDS project', 'Public corp'],
+                ['Ownership', 'Columbia M.S. CIS project', 'Public corp'],
               ].map(([feature, us, them]) => (
                 <tr key={feature}>
                   <td className="py-2.5 text-xs text-[var(--molt-sand)]/50">{feature}</td>
@@ -225,7 +225,7 @@ export default function AboutPage() {
           </div>
           <div>
             <p className="font-semibold text-[var(--molt-sand)]">Erwin He</p>
-            <p className="text-xs text-[var(--molt-sand)]/50">Columbia MSDS · gh2722@columbia.edu</p>
+            <p className="text-xs text-[var(--molt-sand)]/50">M.S. CIS, Columbia University · gh2722@columbia.edu</p>
           </div>
         </div>
       </section>

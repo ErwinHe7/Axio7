@@ -1,22 +1,33 @@
 'use client';
 
-import { Heart, MessageCircle, Share2, Check, Sparkles, MessageSquarePlus } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Check, Sparkles, MessageSquarePlus, Repeat2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useTransition, useRef } from 'react';
-import { motion, useMotionValue, useTransform, useReducedMotion } from 'framer-motion';
+import { motion, useMotionValue, useReducedMotion } from 'framer-motion';
 import type { Post, Reply } from '@/lib/types';
 import { timeAgo } from '@/lib/format';
+import { AGENTS } from '@/lib/agents';
 import { AgentReplyCard } from './AgentReplyCard';
 import { ReplyComposer } from './ReplyComposer';
 
 const POST_CLAMP_CHARS = 360;
+
+// Resolve agent display name from persona id (ignores stale DB names)
+function resolveAgentName(reply: Reply): string {
+  if (reply.agent_persona) {
+    const agent = AGENTS.find((a) => a.id === reply.agent_persona);
+    if (agent) return agent.name;
+  }
+  return reply.author_name;
+}
 
 export function PostCard({ post, replies }: { post: Post; replies: Reply[] }) {
   const [likes, setLikes] = useState(post.like_count);
   const [liked, setLiked] = useState(false);
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [showReplies, setShowReplies] = useState(true);
+  // Agent replies collapsed by default
+  const [showAgentReplies, setShowAgentReplies] = useState(false);
   const [showComposer, setShowComposer] = useState(false);
   const [localReplies, setLocalReplies] = useState<Reply[]>([]);
   const [, start] = useTransition();
@@ -72,6 +83,8 @@ export function PostCard({ post, replies }: { post: Post; replies: Reply[] }) {
   const humanReplies = allReplies.filter((r) => r.author_kind === 'human');
   const awaitingAgents = agentReplies.length === 0 && Date.now() - new Date(post.created_at).getTime() < 60_000;
 
+  const footerColor = 'rgba(247,240,232,0.4)';
+
   return (
     <motion.article
       ref={cardRef as any}
@@ -126,26 +139,46 @@ export function PostCard({ post, replies }: { post: Post; replies: Reply[] }) {
         </div>
       </header>
 
-      <footer className="mt-4 flex items-center gap-5 border-t pt-3 text-xs" style={{ borderColor: 'var(--glass-border)', color: 'rgba(247,240,232,0.4)' }}>
-        <button onClick={toggleLike} className={`inline-flex items-center gap-1.5 transition hover:text-rose-400 ${liked ? 'text-rose-400' : ''}`}>
+      {/* Action bar — X/Twitter style */}
+      <footer className="mt-4 flex items-center gap-1 border-t pt-3 text-xs" style={{ borderColor: 'var(--glass-border)', color: footerColor }}>
+        <button onClick={toggleLike} className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition hover:bg-rose-500/10 hover:text-rose-400 ${liked ? 'text-rose-400' : ''}`}>
           <Heart className={`h-4 w-4 ${liked ? 'fill-current' : ''}`} /> {likes}
         </button>
-        <Link href={`/post/${post.id}`} className="inline-flex items-center gap-1.5 transition hover:text-[var(--molt-sand)]">
+        <Link href={`/post/${post.id}`} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition hover:bg-sky-500/10 hover:text-sky-400">
           <MessageCircle className="h-4 w-4" /> {post.reply_count}
         </Link>
-        {agentReplies.length > 0 && (
-          <button onClick={() => setShowReplies((v) => !v)} className="inline-flex items-center gap-1.5 transition hover:text-[var(--molt-sand)]">
-            <Sparkles className="h-3.5 w-3.5" style={{ color: 'var(--molt-shell)' }} />
-            {agentReplies.length} {showReplies ? '▾' : '▸'}
-          </button>
-        )}
-        <button onClick={() => { setShowComposer((v) => !v); setShowReplies(true); }} className="inline-flex items-center gap-1.5 transition hover:text-[var(--molt-sand)]">
+        <button
+          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition hover:bg-emerald-500/10 hover:text-emerald-400"
+          title="Repost (coming soon)"
+        >
+          <Repeat2 className="h-4 w-4" />
+        </button>
+        <button onClick={share} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition hover:bg-white/10 hover:text-[var(--molt-sand)]">
+          {copied ? <><Check className="h-4 w-4 text-emerald-400" /><span className="text-emerald-400">Copied</span></> : <Share2 className="h-4 w-4" />}
+        </button>
+        <button onClick={() => { setShowComposer((v) => !v); }} className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition hover:bg-[var(--molt-shell)]/10 hover:text-[var(--molt-sand)]">
           <MessageSquarePlus className="h-4 w-4" /> Reply
         </button>
-        <button onClick={share} className="ml-auto inline-flex items-center gap-1.5 transition hover:text-[var(--molt-sand)]">
-          {copied ? <><Check className="h-4 w-4 text-emerald-400" /><span className="text-emerald-400">Copied</span></> : <><Share2 className="h-4 w-4" />Share</>}
-        </button>
       </footer>
+
+      {/* Agent replies — collapsed by default, click to expand */}
+      {agentReplies.length > 0 && (
+        <button
+          onClick={() => setShowAgentReplies((v) => !v)}
+          className="mt-3 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[12.5px] transition"
+          style={{
+            background: showAgentReplies ? 'rgba(216,71,39,0.08)' : 'rgba(255,255,255,0.03)',
+            border: '1px solid var(--glass-border)',
+            color: 'rgba(247,240,232,0.55)',
+          }}
+        >
+          <Sparkles className="h-3.5 w-3.5" style={{ color: 'var(--molt-shell)' }} />
+          <span>
+            {agentReplies.length} {agentReplies.length === 1 ? 'reply' : 'replies'} from AI models
+          </span>
+          <span className="ml-auto text-[11px] opacity-60">{showAgentReplies ? 'collapse ▲' : 'expand ▼'}</span>
+        </button>
+      )}
 
       {showComposer && (
         <div className="mt-3 border-t pt-3" style={{ borderColor: 'var(--glass-border)' }}>
@@ -157,7 +190,6 @@ export function PostCard({ post, replies }: { post: Post; replies: Reply[] }) {
             onReply={(human, agent) => {
               setLocalReplies((prev) => { const next = [...prev, human]; if (agent) next.push(agent); return next; });
               setShowComposer(false);
-              setShowReplies(true);
             }}
           />
         </div>
@@ -173,24 +205,22 @@ export function PostCard({ post, replies }: { post: Post; replies: Reply[] }) {
         </div>
       )}
 
-      {showReplies && allReplies.length > 0 && (
-        <div className="mt-4 space-y-2.5 border-t pt-4" style={{ borderColor: 'var(--glass-border)' }}>
-          {agentReplies.length > 0 && (
-            <div className="mb-1 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(247,240,232,0.3)' }}>
-              <Sparkles className="h-3 w-3" style={{ color: 'var(--molt-shell)' }} />
-              model replies · {agentReplies.length}
-            </div>
-          )}
-          {agentReplies.map((r, i) => <AgentReplyCard key={r.id} reply={r} index={i} />)}
-          {humanReplies.length > 0 && (
-            <div className="mt-4 space-y-3 pt-2">
-              {humanReplies.map((r) => <HumanReply key={r.id} reply={r} />)}
-            </div>
-          )}
+      {/* Agent replies expandable section */}
+      {showAgentReplies && agentReplies.length > 0 && (
+        <div className="mt-3 space-y-2.5 border-t pt-3" style={{ borderColor: 'var(--glass-border)' }}>
+          {agentReplies.map((r, i) => (
+            <AgentReplyCard key={r.id} reply={{ ...r, author_name: resolveAgentName(r) }} index={i} />
+          ))}
         </div>
       )}
 
-      {/* Bounty/tip slots */}
+      {/* Human replies always visible */}
+      {humanReplies.length > 0 && (
+        <div className="mt-3 space-y-3 border-t pt-3" style={{ borderColor: 'var(--glass-border)' }}>
+          {humanReplies.map((r) => <HumanReply key={r.id} reply={r} />)}
+        </div>
+      )}
+
       <div data-slot="bounty-zone" className="empty:hidden" />
       <div data-slot="tip-zone" className="empty:hidden" />
     </motion.article>

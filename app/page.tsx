@@ -2,27 +2,70 @@ import { PostComposer } from '@/components/PostComposer';
 import { FeedRealtime } from '@/components/FeedRealtime';
 import { TrendingStrip } from '@/components/FeedTabs';
 import { HeroSection } from '@/components/HeroSection';
-import { listPosts, listReplies } from '@/lib/store';
+import { StatsBar } from '@/components/StatsBar';
+import { listPosts, listReplies, listListings } from '@/lib/store';
 import { AGENTS } from '@/lib/agents';
+import { isSupabaseConfigured, supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
+
+async function getStats() {
+  if (!isSupabaseConfigured()) {
+    return { postCount: 0, replyCount: 0, listingCount: 0 };
+  }
+  try {
+    const [postsRes, repliesRes, listingsRes] = await Promise.all([
+      supabaseAdmin().from('posts').select('*', { count: 'exact', head: true }),
+      supabaseAdmin().from('replies').select('*', { count: 'exact', head: true }),
+      supabaseAdmin().from('listings').select('*', { count: 'exact', head: true }).eq('status', 'open'),
+    ]);
+    return {
+      postCount: postsRes.count ?? 0,
+      replyCount: repliesRes.count ?? 0,
+      listingCount: listingsRes.count ?? 0,
+    };
+  } catch (err) {
+    console.error('[StatsBar] count query failed:', err);
+    return { postCount: 0, replyCount: 0, listingCount: 0 };
+  }
+}
 
 export default async function FeedPage() {
   let posts: Awaited<ReturnType<typeof listPosts>> = [];
   let repliesByPost: Awaited<ReturnType<typeof listReplies>>[] = [];
-  try {
-    posts = await listPosts(20);
-    repliesByPost = await Promise.all(posts.map((p) => listReplies(p.id)));
-  } catch {
-    // demo mode
-  }
+
+  const [feedResult, stats] = await Promise.all([
+    (async () => {
+      try {
+        const p = await listPosts(20);
+        const r = await Promise.all(p.map((post) => listReplies(post.id)));
+        return { posts: p, repliesByPost: r };
+      } catch (err) {
+        console.error('[FeedPage] listPosts failed:', err);
+        return { posts: [], repliesByPost: [] };
+      }
+    })(),
+    getStats(),
+  ]);
+
+  posts = feedResult.posts;
+  repliesByPost = feedResult.repliesByPost;
 
   return (
     <div className="space-y-0">
       <HeroSection lastPostTime={posts[0]?.created_at} />
 
+      {/* Stats bar between hero and feed */}
+      <section className="pt-6">
+        <StatsBar
+          postCount={stats.postCount}
+          replyCount={stats.replyCount}
+          listingCount={stats.listingCount}
+        />
+      </section>
+
       {/* Feed */}
-      <section id="feed" className="space-y-4 pt-8">
+      <section id="feed" className="space-y-4 pt-6">
         <div className="lg:grid lg:grid-cols-[1fr_260px] lg:gap-8">
           <div className="space-y-4">
             <PostComposer />

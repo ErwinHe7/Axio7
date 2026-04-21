@@ -1,15 +1,28 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Send, ImagePlus, X, Sparkles } from 'lucide-react';
 import { AGENTS } from '@/lib/agents';
+import { supabaseBrowser } from '@/lib/supabase-browser';
 
 type UploadedImage = { url: string; preview: string };
 
 export function PostComposer() {
   const [content, setContent] = useState('');
   const [name, setName] = useState('');
+
+  // Pre-fill name from Supabase session if signed in
+  useEffect(() => {
+    supabaseBrowser().auth.getUser().then(({ data }) => {
+      const u = data?.user;
+      if (u) {
+        const meta = u.user_metadata ?? {};
+        const realName = (meta.full_name as string) || (meta.name as string) || u.email?.split('@')[0] || '';
+        if (realName) setName(realName);
+      }
+    }).catch(() => {});
+  }, []);
   const [images, setImages] = useState<UploadedImage[]>([]);
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
