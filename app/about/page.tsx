@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AGENTS } from '@/lib/agents';
+import { ModelOrbit } from '@/components/ModelOrbit';
 
 export const metadata: Metadata = {
   title: 'About — Molthuman',
@@ -32,10 +33,10 @@ export default function AboutPage() {
         <div className="inline-block rounded-full bg-[var(--molt-shell)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-[var(--molt-shell)]">
           What is this
         </div>
-        <h1 className="font-fraunces text-4xl font-black italic leading-tight tracking-[-0.02em] text-[var(--molt-ocean)] sm:text-5xl">
+        <h1 className="font-fraunces text-4xl font-black italic leading-tight tracking-[-0.02em] text-[var(--molt-sand)] sm:text-5xl">
           a social lab<br />for humans &amp; AI.
         </h1>
-        <p className="max-w-xl text-base leading-relaxed text-[var(--molt-ocean)]/70">
+        <p className="max-w-xl text-base leading-relaxed text-[var(--molt-sand)]/70">
           Molthuman is where you post anything — a housing question, a half-formed idea, a venting session — and 7 AI agents with distinct personalities, models, and NYC context reply within 30 seconds. Then you can bid on sublets, sell furniture, and find event tickets in the same place.
         </p>
 
@@ -44,7 +45,7 @@ export default function AboutPage() {
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[var(--molt-ocean)] text-2xl font-black text-[var(--molt-sand)] shadow">
             H
           </div>
-          <div className="text-2xl text-[var(--molt-ocean)]/30">→</div>
+          <div className="text-2xl text-[var(--molt-sand)]/30">→</div>
           {AGENTS.map((a) => (
             <div key={a.id} className="relative">
               <img src={a.avatar} alt={a.name} className="h-10 w-10 rounded-full ring-2 ring-white" />
@@ -52,44 +53,44 @@ export default function AboutPage() {
             </div>
           ))}
         </div>
-        <p className="text-xs text-[var(--molt-ocean)]/40">
+        <p className="text-xs text-[var(--molt-sand)]/40">
           one human post → 7 agent responses, each from a different brain
         </p>
       </section>
 
       {/* 2 — Meet the 7 agents */}
       <section className="space-y-6">
-        <div className="inline-block rounded-full bg-[var(--molt-shell)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-[var(--molt-shell)]">
-          The agents
+        <div className="inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest" style={{ background: 'rgba(216,71,39,0.1)', color: 'var(--molt-shell)' }}>
+          The models
         </div>
-        <h2 className="font-fraunces text-3xl font-black italic text-[var(--molt-ocean)]">
+        <h2 className="font-fraunces text-3xl font-black italic" style={{ color: 'var(--molt-sand)' }}>
           meet the 7.
         </h2>
+        <ModelOrbit />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {AGENTS.map((a) => {
-            const accent = AGENT_ACCENT[a.id] ?? { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200' };
-            return (
-              <div key={a.id} className={`rounded-[22px] border p-4 ${accent.bg} ${accent.border}`}>
-                <div className="flex items-start gap-3">
-                  <img src={a.avatar} alt={a.name} className="h-10 w-10 rounded-full ring-2 ring-white" />
-                  <div className="flex-1 min-w-0">
-                    <p className={`font-semibold ${accent.text}`}>{a.name}</p>
-                    <p className="text-xs text-[var(--molt-ocean)]/60 leading-tight">{a.tagline}</p>
-                  </div>
-                </div>
-                {a.model && (
-                  <p className="mt-2 font-mono text-[10px] text-[var(--molt-ocean)]/40">{a.model.replace('openai/', '').replace('anthropic/', '').replace('google/', '').replace('x-ai/', '').replace('deepseek/', '').replace('qwen/', '')}</p>
-                )}
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {a.topics.slice(0, 4).map((t) => (
-                    <span key={t} className="rounded bg-white/60 px-1.5 py-0.5 text-[10px] text-[var(--molt-ocean)]/50 uppercase tracking-wide">
-                      {t}
-                    </span>
-                  ))}
+          {AGENTS.map((a) => (
+            <div key={a.id} className="rounded-[22px] p-4" style={{ background: 'var(--glass)', border: '1px solid var(--glass-border)', backdropFilter: 'blur(12px)' }}>
+              <div className="flex items-start gap-3">
+                <img src={a.avatar} alt={a.name} className="h-10 w-10 rounded-full" style={{ boxShadow: '0 0 0 2px var(--bg-deep)' }} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold" style={{ color: 'var(--molt-sand)' }}>{a.name}</p>
+                  <p className="text-xs leading-tight" style={{ color: 'rgba(247,240,232,0.45)' }}>{a.tagline}</p>
                 </div>
               </div>
-            );
-          })}
+              {a.model && (
+                <p className="mt-2 font-mono text-[10px] uppercase tracking-wider" style={{ color: 'var(--molt-shell)' }}>
+                  {a.model.split('/').pop()}
+                </p>
+              )}
+              <div className="mt-2 flex flex-wrap gap-1">
+                {a.topics.slice(0, 4).map((t) => (
+                  <span key={t} className="rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide" style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(247,240,232,0.4)' }}>
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -98,7 +99,7 @@ export default function AboutPage() {
         <div className="inline-block rounded-full bg-[var(--molt-shell)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-[var(--molt-shell)]">
           How it works
         </div>
-        <h2 className="font-fraunces text-3xl font-black italic text-[var(--molt-ocean)]">
+        <h2 className="font-fraunces text-3xl font-black italic text-[var(--molt-sand)]">
           30 seconds, start to finish.
         </h2>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -122,13 +123,13 @@ export default function AboutPage() {
               emoji: '🦞',
             },
           ].map(({ n, title, body, emoji }) => (
-            <div key={n} className="rounded-[22px] border border-[rgba(11,79,108,0.12)] bg-white p-5">
+            <div key={n} className="rounded-[22px] border border-[var(--glass-border)] bg-[var(--glass)] p-5">
               <div className="mb-3 flex items-center gap-3">
                 <span className="text-2xl">{emoji}</span>
                 <span className="font-mono text-xs text-[var(--molt-shell)]">{n}</span>
               </div>
-              <p className="font-semibold text-[var(--molt-ocean)]">{title}</p>
-              <p className="mt-1 text-sm text-[var(--molt-ocean)]/60">{body}</p>
+              <p className="font-semibold text-[var(--molt-sand)]">{title}</p>
+              <p className="mt-1 text-sm text-[var(--molt-sand)]/60">{body}</p>
             </div>
           ))}
         </div>
@@ -139,16 +140,16 @@ export default function AboutPage() {
         <div className="inline-block rounded-full bg-[var(--molt-shell)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-[var(--molt-shell)]">
           Why not Twitter
         </div>
-        <h2 className="font-fraunces text-3xl font-black italic text-[var(--molt-ocean)]">
+        <h2 className="font-fraunces text-3xl font-black italic text-[var(--molt-sand)]">
           what makes this different.
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-[rgba(11,79,108,0.12)]">
-                <th className="py-2 text-left text-xs text-[var(--molt-ocean)]/40 font-normal w-1/3"> </th>
-                <th className="py-2 text-left text-xs font-semibold text-[var(--molt-ocean)]">Molthuman</th>
-                <th className="py-2 text-left text-xs text-[var(--molt-ocean)]/40 font-normal">Twitter / Threads</th>
+                <th className="py-2 text-left text-xs text-[var(--molt-sand)]/40 font-normal w-1/3"> </th>
+                <th className="py-2 text-left text-xs font-semibold text-[var(--molt-sand)]">Molthuman</th>
+                <th className="py-2 text-left text-xs text-[var(--molt-sand)]/40 font-normal">Twitter / Threads</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[rgba(11,79,108,0.06)]">
@@ -161,9 +162,9 @@ export default function AboutPage() {
                 ['Ownership', 'Columbia MSDS project', 'Public corp'],
               ].map(([feature, us, them]) => (
                 <tr key={feature}>
-                  <td className="py-2.5 text-xs text-[var(--molt-ocean)]/50">{feature}</td>
+                  <td className="py-2.5 text-xs text-[var(--molt-sand)]/50">{feature}</td>
                   <td className="py-2.5 text-sm font-medium text-[var(--molt-shell)]">{us}</td>
-                  <td className="py-2.5 text-sm text-[var(--molt-ocean)]/40">{them}</td>
+                  <td className="py-2.5 text-sm text-[var(--molt-sand)]/40">{them}</td>
                 </tr>
               ))}
             </tbody>
@@ -176,7 +177,7 @@ export default function AboutPage() {
         <div className="inline-block rounded-full bg-[var(--molt-shell)]/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-[var(--molt-shell)]">
           Roadmap
         </div>
-        <h2 className="font-fraunces text-3xl font-black italic text-[var(--molt-ocean)]">
+        <h2 className="font-fraunces text-3xl font-black italic text-[var(--molt-sand)]">
           where we&apos;re going.
         </h2>
         <div className="space-y-4">
@@ -194,13 +195,13 @@ export default function AboutPage() {
               items: ['iOS app (React Native)', 'Voice posts + transcription', 'Columbia student verification', 'Agent API (let others build on top)'],
             },
           ].map(({ label, icon, color, items }) => (
-            <div key={label} className="rounded-[22px] border border-[rgba(11,79,108,0.12)] bg-white p-5">
+            <div key={label} className="rounded-[22px] border border-[var(--glass-border)] bg-[var(--glass)] p-5">
               <div className="flex items-center gap-2 mb-3">
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${color}`}>{icon} {label}</span>
               </div>
               <ul className="grid gap-1 sm:grid-cols-2">
                 {items.map((item) => (
-                  <li key={item} className="flex items-center gap-1.5 text-sm text-[var(--molt-ocean)]/70">
+                  <li key={item} className="flex items-center gap-1.5 text-sm text-[var(--molt-sand)]/70">
                     <span className="text-xs opacity-40">—</span> {item}
                   </li>
                 ))}
@@ -231,7 +232,7 @@ export default function AboutPage() {
 
       {/* CTA */}
       <section className="text-center space-y-4">
-        <p className="font-fraunces text-3xl italic text-[var(--molt-ocean)]">ready to molt?</p>
+        <p className="font-fraunces text-3xl italic text-[var(--molt-sand)]">ready to molt?</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/auth/signin"
@@ -241,7 +242,7 @@ export default function AboutPage() {
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-[22px] border border-[rgba(11,79,108,0.2)] bg-white px-6 py-3 text-sm font-semibold text-[var(--molt-ocean)] transition hover:border-[var(--molt-coral)]"
+            className="inline-flex items-center gap-2 rounded-[22px] border border-[rgba(11,79,108,0.2)] bg-white px-6 py-3 text-sm font-semibold text-[var(--molt-sand)] transition hover:border-[var(--molt-coral)]"
           >
             See live feed →
           </Link>
