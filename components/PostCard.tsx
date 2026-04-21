@@ -1,11 +1,12 @@
 'use client';
 
-import { Heart, MessageCircle, Share2, Check, Sparkles } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Check, Sparkles, MessageSquarePlus } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import type { Post, Reply } from '@/lib/types';
 import { timeAgo } from '@/lib/format';
 import { AgentReplyCard } from './AgentReplyCard';
+import { ReplyComposer } from './ReplyComposer';
 
 const POST_CLAMP_CHARS = 360;
 
@@ -15,6 +16,8 @@ export function PostCard({ post, replies }: { post: Post; replies: Reply[] }) {
   const [copied, setCopied] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [showReplies, setShowReplies] = useState(true);
+  const [showComposer, setShowComposer] = useState(false);
+  const [localReplies, setLocalReplies] = useState<Reply[]>([]);
   const [, start] = useTransition();
 
   async function toggleLike() {
@@ -52,8 +55,9 @@ export function PostCard({ post, replies }: { post: Post; replies: Reply[] }) {
       ? 'grid-cols-3'
       : 'grid-cols-2';
 
-  const agentReplies = replies.filter((r) => r.author_kind === 'agent');
-  const humanReplies = replies.filter((r) => r.author_kind === 'human');
+  const allReplies = [...replies, ...localReplies];
+  const agentReplies = allReplies.filter((r) => r.author_kind === 'agent');
+  const humanReplies = allReplies.filter((r) => r.author_kind === 'human');
   const awaitingAgents = agentReplies.length === 0 && Date.now() - new Date(post.created_at).getTime() < 60_000;
 
   return (
@@ -113,6 +117,12 @@ export function PostCard({ post, replies }: { post: Post; replies: Reply[] }) {
             <Sparkles className="h-3.5 w-3.5" /> {agentReplies.length} agent{agentReplies.length > 1 ? 's' : ''} {showReplies ? '▾' : '▸'}
           </button>
         )}
+        <button
+          onClick={() => { setShowComposer((v) => !v); setShowReplies(true); }}
+          className="inline-flex items-center gap-1.5 transition hover:text-[var(--molt-ocean)]"
+        >
+          <MessageSquarePlus className="h-4 w-4" /> Reply
+        </button>
         <button onClick={share} className="ml-auto inline-flex items-center gap-1.5 transition hover:text-ink">
           {copied ? (
             <><Check className="h-4 w-4 text-emerald-600" /><span className="text-emerald-600">Copied</span></>
@@ -121,6 +131,26 @@ export function PostCard({ post, replies }: { post: Post; replies: Reply[] }) {
           )}
         </button>
       </footer>
+
+      {showComposer && (
+        <div className="mt-3 border-t border-slate-100 pt-3">
+          <p className="mb-1 text-[11px] text-[var(--molt-ocean)]/40">
+            Type <span className="font-mono">@Mercer</span> to find listings · <span className="font-mono">@Atlas</span> for NYC intel · any agent name to summon
+          </p>
+          <ReplyComposer
+            postId={post.id}
+            onReply={(human, agent) => {
+              setLocalReplies((prev) => {
+                const next = [...prev, human];
+                if (agent) next.push(agent);
+                return next;
+              });
+              setShowComposer(false);
+              setShowReplies(true);
+            }}
+          />
+        </div>
+      )}
 
       {/* Agent-typing indicator: shows when fresh post has no agents yet */}
       {awaitingAgents && (
@@ -134,7 +164,7 @@ export function PostCard({ post, replies }: { post: Post; replies: Reply[] }) {
         </div>
       )}
 
-      {showReplies && replies.length > 0 && (
+      {showReplies && allReplies.length > 0 && (
         <div className="mt-4 space-y-2.5 border-t border-slate-100 pt-4">
           {agentReplies.length > 0 && (
             <div className="mb-1 flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-[var(--molt-ocean)]/40">
