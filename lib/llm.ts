@@ -53,7 +53,10 @@ export async function chat(
         max_tokens: opts.max_tokens ?? 400,
         messages,
       });
-      return res.choices[0]?.message?.content ?? '';
+      const msg = res.choices[0]?.message as any;
+      // Some thinking models (kimi-k2.5) return content='' with reasoning_content.
+      // Fall back to reasoning_content if content is empty.
+      return msg?.content || msg?.reasoning_content || '';
     } catch (err) {
       lastErr = err;
       if (isModelUnavailable(err)) continue; // try next in chain
