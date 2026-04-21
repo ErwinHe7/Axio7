@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Home, ShoppingBag, User, LogIn, LogOut, Info } from 'lucide-react';
+import { Home, ShoppingBag, User, LogIn, LogOut, Info, MapPinned } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth';
 
 export async function Nav() {
@@ -7,17 +7,18 @@ export async function Nav() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-[rgba(11,79,108,0.12)] bg-[var(--molt-sand)]/90 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-1.5 text-[1.1rem] font-semibold tracking-tight">
           <span className="text-xl leading-none">🦞</span>
           <span className="font-fraunces italic text-[var(--molt-ocean)]">molthuman</span>
         </Link>
 
         <nav className="flex items-center gap-1 text-sm">
-          <NavLink href="/"        icon={<Home className="h-4 w-4" />}        label="Feed"    />
-          <NavLink href="/trade"   icon={<ShoppingBag className="h-4 w-4" />} label="Trade"   />
-          <NavLink href="/about"   icon={<Info className="h-4 w-4" />}         label="About"   />
-          <NavLink href="/profile" icon={<User className="h-4 w-4" />}        label="Profile" />
+          <NavLink href="/"              icon={<Home className="h-4 w-4" />}        label="Feed"    />
+          <NavLink href="/trade"         icon={<ShoppingBag className="h-4 w-4" />} label="Trade"   />
+          <NavLink href="/trade/rentals" icon={<MapPinned className="h-4 w-4" />}   label="Rentals" />
+          <NavLink href="/about"         icon={<Info className="h-4 w-4" />}        label="About"   />
+          <NavLink href="/profile"       icon={<User className="h-4 w-4" />}        label="Profile" />
 
           {user.authenticated ? (
             <UserChip user={user} />

@@ -46,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
       <body className="min-h-screen">
         <Nav />
-        <main className="mx-auto max-w-3xl px-4 pb-24 pt-6">
+        <main className="mx-auto max-w-5xl px-4 pb-24 pt-6">
           <ErrorBoundary>{children}</ErrorBoundary>
         </main>
         <Footer />

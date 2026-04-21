@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Post, Reply } from '@/lib/types';
 import { PostCard } from './PostCard';
+import { FeedTabs, filterByTab, type FeedTab } from './FeedTabs';
 
 /**
  * Wraps the initial SSR-rendered post list and subscribes to Supabase Realtime.
@@ -25,15 +26,15 @@ export function FeedRealtime({
     return m;
   });
   const [newPostIds, setNewPostIds] = useState<Set<string>>(new Set());
+  const [tab, setTab] = useState<FeedTab>('all');
   const router = useRouter();
   const channelRef = useRef<ReturnType<ReturnType<typeof import('../lib/supabase-browser').supabaseBrowser>['channel']> | null>(null);
 
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !anon) return; // demo mode — no realtime
+    if (!url || !anon) return;
 
-    // Dynamic import keeps supabase-browser out of the server bundle
     import('../lib/supabase-browser').then(({ supabaseBrowser }) => {
       const sb = supabaseBrowser();
 
@@ -85,21 +86,33 @@ export function FeedRealtime({
     };
   }, []);
 
-  // Keep router in sync so SSR pages also get the latest data on navigation
   useEffect(() => {
     router.refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [posts.length]);
 
+  const visible = useMemo(() => filterByTab(posts, tab), [posts, tab]);
+
   return (
-    <div className="space-y-3">
-      {posts.map((post, i) => (
-        <div
-          key={post.id}
-          className={newPostIds.has(post.id) ? 'animate-slide-in' : ''}
-        >
-          <PostCard post={post} replies={repliesMap[post.id] ?? []} />
-        </div>
-      ))}
+    <div>
+      <FeedTabs value={tab} onChange={setTab} />
+
+      <div className="mt-4 space-y-4">
+        {visible.length === 0 ? (
+          <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/60 p-10 text-center text-sm text-ink-muted">
+            No posts in <span className="font-medium">{tab}</span> yet — be the first.
+          </div>
+        ) : (
+          visible.map((post) => (
+            <div
+              key={post.id}
+              className={newPostIds.has(post.id) ? 'animate-slide-in' : ''}
+            >
+              <PostCard post={post} replies={repliesMap[post.id] ?? []} />
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
