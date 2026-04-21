@@ -45,7 +45,7 @@ export function PostCard({ post, replies }: { post: Post; replies: Reply[] }) {
       : 'grid-cols-2';
 
   return (
-    <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article className="group rounded-[22px] border border-[rgba(11,79,108,0.12)] bg-white p-4 transition hover:border-[var(--molt-coral)] hover:border-[1.5px]">
       <header className="flex items-start gap-3">
         <img src={post.author_avatar ?? ''} alt="" className="h-9 w-9 rounded-full bg-slate-100" />
         <div className="flex-1">

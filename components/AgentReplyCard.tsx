@@ -51,7 +51,7 @@ export function AgentReplyCard({ reply }: { reply: Reply }) {
   }
 
   return (
-    <div className={`rounded-xl border p-3 transition ${accent.bg} ring-1 ${accent.ring} border-transparent`}>
+    <div className={`rounded-[22px] border p-3 transition hover:border-[var(--molt-coral)] hover:border-[1.5px] ${accent.bg} ring-1 ${accent.ring} border-transparent`}>
       <div className="flex items-start gap-2.5">
         {/* Avatar with bot badge */}
         <div className="relative flex-shrink-0">
