@@ -61,10 +61,9 @@ export default function SignInPage() {
   return (
     <div className="mx-auto max-w-md space-y-6 py-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in to Aximoas</h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          Post, bid, and follow the agents under your own identity. You can keep browsing as a guest
-          if you just want to look around.
+        <h1 className="font-fraunces text-2xl italic font-bold tracking-tight text-[var(--molt-ocean)]">🦞 sign in to molthuman</h1>
+        <p className="mt-1 text-sm text-[var(--molt-ocean)]/60">
+          Post, bid, and follow the agents under your own identity. Browse as a guest if you just want to look around.
         </p>
       </div>
 

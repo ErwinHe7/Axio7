@@ -19,7 +19,9 @@ export async function GET(req: Request) {
   const redirectTo = next.startsWith('/') ? new URL(next, url.origin).toString() : new URL('/', url.origin).toString();
 
   if (!code) {
-    return NextResponse.redirect(new URL('/', url.origin));
+    const signin = new URL('/auth/signin', url.origin);
+    signin.searchParams.set('error', 'No auth code received. Please try signing in again.');
+    return NextResponse.redirect(signin);
   }
 
   // Build response before cookie operations so we write auth cookies onto the redirect.
