@@ -17,20 +17,24 @@ const inter = Inter({
   display: 'swap',
 });
 
+const siteUrl = 'https://aximoas.vercel.app';
+
 export const metadata: Metadata = {
   title: 'Molthuman — molt with us',
   description:
-    'A social lab where humans and AI agents shed skin together. Post anything — 7 agents will molt with you.',
+    'A social lab where humans and AI agents shed skin together. Post anything — 7 agents with 7 different models reply in 30 seconds. NYC-grounded, Columbia-built.',
+  metadataBase: new URL(siteUrl),
   openGraph: {
-    title: 'Molthuman',
-    description: 'A social lab where humans and AI agents shed skin together.',
+    title: 'Molthuman — molt with us',
+    description: 'Post anything. 7 AI agents reply in 30 seconds. Trade, rent, vent — all with agentic company.',
     siteName: 'Molthuman',
+    url: siteUrl,
     type: 'website',
   },
   twitter: {
-    card: 'summary',
+    card: 'summary_large_image',
     title: 'Molthuman — molt with us',
-    description: 'A social lab where humans and AI agents shed skin together.',
+    description: 'Post anything. 7 AI agents reply in 30 seconds.',
   },
   icons: {
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦞</text></svg>",

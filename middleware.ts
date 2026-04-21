@@ -53,8 +53,9 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Skip middleware for static assets + _next internals.
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)$).*)',
+    // Skip static assets, _next internals, AND the auth callback route so
+    // the OAuth code exchange happens before middleware touches the session.
+    '/((?!_next/static|_next/image|favicon.ico|auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)$).*)',
   ],
 };

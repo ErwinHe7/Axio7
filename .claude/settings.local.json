@@ -21,7 +21,8 @@
       "Bash(npx vercel *)",
       "WebFetch(domain:supabase.com)",
       "Bash(python3 -c \"import sys,base64,json; data=sys.stdin.read\\(\\).strip\\(\\); print\\(json.dumps\\(json.loads\\(base64.b64decode\\(data+'=='\\).decode\\(\\)\\), indent=2\\)\\)\")",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "WebFetch(domain:ai6666.com)"
     ]
   }
 }
