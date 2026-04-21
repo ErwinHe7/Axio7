@@ -1,22 +1,30 @@
 import { randomUUID } from 'crypto';
-import type { Bid, Listing, Post, Reply } from './types';
+import { isSupabaseConfigured, supabaseAdmin } from './supabase';
+import type { Bid, Listing, Post, Reply, AgentReplyMeta, Reaction, Transaction, Message, AgentProfileRow } from './types';
 
-// In-memory demo store. Works without Supabase for instant local dev.
-// Swap to Supabase by wiring through lib/supabase.ts once env vars are set.
+// Dual-mode store.
+// - If Supabase env vars are set → all reads/writes hit Supabase (persists on Vercel serverless).
+// - Else → in-memory fallback so local dev runs without any DB setup.
+// API is async either way.
 
 type DB = {
   posts: Post[];
   replies: Reply[];
+  reply_meta: Record<string, AgentReplyMeta>;
   listings: Listing[];
   bids: Bid[];
+  reactions: Reaction[];
+  post_likes: { post_id: string; user_id: string }[];
+  transactions: Transaction[];
+  messages: Message[];
+  review_queue: { id: string; reply_id: string; reason: string; status: 'open' | 'approved' | 'rejected'; created_at: string }[];
 };
 
 const g = globalThis as unknown as { __aximoas_db?: DB };
 
 function seed(): DB {
-  const now = () => new Date().toISOString();
-  const demoUser = {
-    id: 'demo-user-1',
+  const seedUser = {
+    id: 'seed-user-1',
     name: 'Demo Human',
     avatar: 'https://api.dicebear.com/9.x/thumbs/svg?seed=Demo',
   };
@@ -24,33 +32,32 @@ function seed(): DB {
   const posts: Post[] = [
     {
       id: randomUUID(),
-      author_id: demoUser.id,
-      author_name: demoUser.name,
-      author_avatar: demoUser.avatar,
+      author_id: seedUser.id,
+      author_name: seedUser.name,
+      author_avatar: seedUser.avatar,
       content:
-        "Just moved to Morningside Heights for a Columbia PhD. Rent in the neighborhood is brutal — any tips on actually-affordable sublets that don't require a broker fee?",
+        "Just moved to Morningside Heights for a Columbia PhD. Rent is brutal — any tips on actually-affordable sublets that don't require a broker fee?",
       created_at: new Date(Date.now() - 3600_000 * 4).toISOString(),
       reply_count: 0,
       like_count: 12,
     },
     {
       id: randomUUID(),
-      author_id: 'demo-user-2',
+      author_id: 'seed-user-2',
       author_name: 'Mei',
       author_avatar: 'https://api.dicebear.com/9.x/thumbs/svg?seed=Mei',
       content:
-        "Selling my IKEA Malm desk + chair combo — graduating and moving home. What's a fair price for barely-used stuff when the thrift market is saturated with student move-outs in May?",
+        "Selling my IKEA Malm desk + chair — graduating and moving home. What's a fair price when the thrift market is saturated with May move-outs?",
       created_at: new Date(Date.now() - 3600_000 * 2).toISOString(),
       reply_count: 0,
       like_count: 3,
     },
     {
       id: randomUUID(),
-      author_id: 'demo-user-3',
+      author_id: 'seed-user-3',
       author_name: 'Jordan',
       author_avatar: 'https://api.dicebear.com/9.x/thumbs/svg?seed=Jordan',
-      content:
-        "Feeling wrecked from thesis defense. Didn't sleep. Just need to vent for a second.",
+      content: 'Feeling wrecked from thesis defense. Didn\'t sleep. Just need to vent for a second.',
       created_at: new Date(Date.now() - 60_000 * 40).toISOString(),
       reply_count: 0,
       like_count: 8,
@@ -60,7 +67,7 @@ function seed(): DB {
   const listings: Listing[] = [
     {
       id: randomUUID(),
-      seller_id: 'demo-user-2',
+      seller_id: 'seed-user-2',
       seller_name: 'Mei',
       category: 'furniture',
       title: 'IKEA Malm desk + chair (barely used)',
@@ -76,7 +83,7 @@ function seed(): DB {
     },
     {
       id: randomUUID(),
-      seller_id: 'demo-user-4',
+      seller_id: 'seed-user-4',
       seller_name: 'Sam',
       category: 'sublet',
       title: 'Summer sublet: 1BR Upper West Side, May–Aug',
@@ -92,7 +99,7 @@ function seed(): DB {
     },
     {
       id: randomUUID(),
-      seller_id: 'demo-user-5',
+      seller_id: 'seed-user-5',
       seller_name: 'Priya',
       category: 'electronics',
       title: 'iPad Pro 11" (2023) + Apple Pencil',
@@ -108,82 +115,378 @@ function seed(): DB {
     },
   ];
 
-  return { posts, replies: [], listings, bids: [] };
+  return {
+    posts,
+    replies: [],
+    reply_meta: {},
+    listings,
+    bids: [],
+    reactions: [],
+    post_likes: [],
+    transactions: [],
+    messages: [],
+    review_queue: [],
+  };
 }
 
-function db(): DB {
+function mem(): DB {
   if (!g.__aximoas_db) g.__aximoas_db = seed();
   return g.__aximoas_db;
 }
 
-// Posts
-export function listPosts(): Post[] {
-  return [...db().posts].sort((a, b) => b.created_at.localeCompare(a.created_at));
+function usingDB(): boolean {
+  return isSupabaseConfigured();
 }
-export function getPost(id: string): Post | null {
-  return db().posts.find((p) => p.id === id) ?? null;
+
+// ----- Mappers (Supabase row → app type) -----
+
+function mapPost(row: any): Post {
+  return {
+    id: row.id,
+    author_id: row.author_id ?? '',
+    author_name: row.author_name ?? 'Anonymous',
+    author_avatar: row.author_avatar ?? null,
+    content: row.content,
+    created_at: row.created_at,
+    reply_count: row.reply_count ?? 0,
+    like_count: row.like_count ?? 0,
+  };
 }
-export function createPost(input: { author_name: string; content: string }): Post {
+function mapReply(row: any): Reply {
+  return {
+    id: row.id,
+    post_id: row.post_id,
+    author_kind: row.author_kind,
+    author_id: row.author_id ?? '',
+    author_name: row.author_name ?? 'Agent',
+    author_avatar: row.author_avatar ?? null,
+    agent_persona: row.agent_persona ?? null,
+    content: row.content,
+    created_at: row.created_at,
+    confidence_score: row.confidence_score ?? null,
+    visibility: row.visibility ?? 'public',
+    up_count: row.up_count ?? 0,
+    down_count: row.down_count ?? 0,
+  };
+}
+function mapListing(row: any): Listing {
+  return {
+    id: row.id,
+    seller_id: row.seller_id ?? '',
+    seller_name: row.seller_name ?? 'Anonymous',
+    category: row.category,
+    title: row.title,
+    description: row.description,
+    asking_price_cents: row.asking_price_cents,
+    currency: row.currency ?? 'USD',
+    location: row.location ?? null,
+    images: Array.isArray(row.images) ? row.images : [],
+    status: row.status,
+    created_at: row.created_at,
+    bid_count: row.bid_count ?? 0,
+    top_bid_cents: row.top_bid_cents ?? null,
+  };
+}
+function mapBid(row: any): Bid {
+  return {
+    id: row.id,
+    listing_id: row.listing_id,
+    bidder_id: row.bidder_id ?? '',
+    bidder_name: row.bidder_name ?? 'Anonymous',
+    amount_cents: row.amount_cents,
+    message: row.message ?? null,
+    status: row.status,
+    created_at: row.created_at,
+  };
+}
+
+// ===== Posts =====
+
+export async function listPosts(limit = 50): Promise<Post[]> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin()
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []).map(mapPost);
+  }
+  return [...mem().posts].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, limit);
+}
+
+export async function getPost(id: string): Promise<Post | null> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin().from('posts').select('*').eq('id', id).maybeSingle();
+    if (error) throw error;
+    return data ? mapPost(data) : null;
+  }
+  return mem().posts.find((p) => p.id === id) ?? null;
+}
+
+export async function createPost(input: {
+  author_id?: string;
+  author_name: string;
+  author_avatar?: string | null;
+  content: string;
+}): Promise<Post> {
+  const name = input.author_name?.trim() || 'Anonymous';
+  const avatar =
+    input.author_avatar ??
+    `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(name)}`;
+  const authorId = input.author_id ?? `guest-${randomUUID()}`;
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin()
+      .from('posts')
+      .insert({
+        author_id: authorId,
+        author_name: name,
+        author_avatar: avatar,
+        content: input.content,
+      })
+      .select('*')
+      .single();
+    if (error) throw error;
+    return mapPost(data);
+  }
   const p: Post = {
     id: randomUUID(),
-    author_id: 'demo-user-' + Math.random().toString(36).slice(2, 8),
-    author_name: input.author_name || 'Anonymous',
-    author_avatar: `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(input.author_name || 'anon')}`,
+    author_id: authorId,
+    author_name: name,
+    author_avatar: avatar,
     content: input.content,
     created_at: new Date().toISOString(),
     reply_count: 0,
     like_count: 0,
   };
-  db().posts.push(p);
-  return p;
-}
-export function incrementLike(id: string): Post | null {
-  const p = getPost(id);
-  if (p) p.like_count += 1;
+  mem().posts.push(p);
   return p;
 }
 
-// Replies
-export function listReplies(postId: string): Reply[] {
-  return db()
-    .replies.filter((r) => r.post_id === postId)
+export async function incrementLike(postId: string, userId: string): Promise<{ post: Post | null; liked: boolean }> {
+  if (usingDB()) {
+    const { data: existing } = await supabaseAdmin()
+      .from('post_likes')
+      .select('post_id')
+      .eq('post_id', postId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (existing) {
+      await supabaseAdmin().from('post_likes').delete().eq('post_id', postId).eq('user_id', userId);
+      await supabaseAdmin().rpc('decrement_post_like', { p_id: postId }).throwOnError();
+    } else {
+      await supabaseAdmin().from('post_likes').insert({ post_id: postId, user_id: userId });
+      await supabaseAdmin().rpc('increment_post_like', { p_id: postId }).throwOnError();
+    }
+    const post = await getPost(postId);
+    return { post, liked: !existing };
+  }
+  const likes = mem().post_likes;
+  const idx = likes.findIndex((l) => l.post_id === postId && l.user_id === userId);
+  const p = mem().posts.find((x) => x.id === postId);
+  if (!p) return { post: null, liked: false };
+  if (idx >= 0) {
+    likes.splice(idx, 1);
+    p.like_count = Math.max(0, p.like_count - 1);
+    return { post: p, liked: false };
+  }
+  likes.push({ post_id: postId, user_id: userId });
+  p.like_count += 1;
+  return { post: p, liked: true };
+}
+
+// ===== Replies =====
+
+export async function listReplies(postId: string, opts?: { includeReview?: boolean }): Promise<Reply[]> {
+  if (usingDB()) {
+    let q = supabaseAdmin().from('replies').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+    if (!opts?.includeReview) q = q.eq('visibility', 'public');
+    const { data, error } = await q;
+    if (error) throw error;
+    return (data ?? []).map(mapReply);
+  }
+  return mem()
+    .replies.filter((r) => r.post_id === postId && (opts?.includeReview || r.visibility !== 'review'))
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
 }
-export function createReply(input: {
+
+export async function listAllReviewReplies(): Promise<Reply[]> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin()
+      .from('replies')
+      .select('*')
+      .eq('visibility', 'review')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    return (data ?? []).map(mapReply);
+  }
+  return mem()
+    .replies.filter((r) => r.visibility === 'review')
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+}
+
+export async function getReply(id: string): Promise<Reply | null> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin().from('replies').select('*').eq('id', id).maybeSingle();
+    if (error) throw error;
+    return data ? mapReply(data) : null;
+  }
+  return mem().replies.find((r) => r.id === id) ?? null;
+}
+
+export async function createReply(input: {
   post_id: string;
   author_kind: 'human' | 'agent';
+  author_id?: string | null;
   author_name: string;
   author_avatar?: string | null;
   agent_persona?: string | null;
   content: string;
-}): Reply {
+  confidence_score?: number | null;
+  visibility?: 'public' | 'review' | 'hidden';
+}): Promise<Reply> {
+  const visibility = input.visibility ?? 'public';
+  const resolvedAuthorId =
+    input.author_kind === 'agent'
+      ? `agent-${input.agent_persona ?? 'unknown'}`
+      : input.author_id ?? `guest-${randomUUID()}`;
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin()
+      .from('replies')
+      .insert({
+        post_id: input.post_id,
+        author_kind: input.author_kind,
+        author_id: resolvedAuthorId,
+        author_name: input.author_name,
+        author_avatar: input.author_avatar ?? null,
+        agent_persona: input.agent_persona ?? null,
+        content: input.content,
+        confidence_score: input.confidence_score ?? null,
+        visibility,
+      })
+      .select('*')
+      .single();
+    if (error) throw error;
+    await supabaseAdmin().rpc('increment_post_reply', { p_id: input.post_id }).throwOnError().then(() => {}, () => {});
+    return mapReply(data);
+  }
   const r: Reply = {
     id: randomUUID(),
     post_id: input.post_id,
     author_kind: input.author_kind,
-    author_id: input.author_kind === 'agent' ? `agent-${input.agent_persona}` : 'demo-user',
+    author_id: resolvedAuthorId,
     author_name: input.author_name,
     author_avatar: input.author_avatar ?? null,
     agent_persona: input.agent_persona ?? null,
     content: input.content,
     created_at: new Date().toISOString(),
+    confidence_score: input.confidence_score ?? null,
+    visibility,
+    up_count: 0,
+    down_count: 0,
   };
-  db().replies.push(r);
-  const post = getPost(input.post_id);
+  mem().replies.push(r);
+  const post = mem().posts.find((p) => p.id === input.post_id);
   if (post) post.reply_count += 1;
   return r;
 }
 
-// Listings
-export function listListings(filter?: { category?: string }): Listing[] {
-  let items = [...db().listings];
+export async function enqueueReview(replyId: string, reason: string): Promise<void> {
+  if (usingDB()) {
+    await supabaseAdmin().from('review_queue').insert({ reply_id: replyId, reason, status: 'open' });
+    return;
+  }
+  mem().review_queue.push({
+    id: randomUUID(),
+    reply_id: replyId,
+    reason,
+    status: 'open',
+    created_at: new Date().toISOString(),
+  });
+}
+
+export async function resolveReview(replyId: string, decision: 'approved' | 'rejected'): Promise<void> {
+  if (usingDB()) {
+    await supabaseAdmin().from('review_queue').update({ status: decision }).eq('reply_id', replyId);
+    if (decision === 'approved') {
+      await supabaseAdmin().from('replies').update({ visibility: 'public' }).eq('id', replyId);
+    } else {
+      await supabaseAdmin().from('replies').update({ visibility: 'hidden' }).eq('id', replyId);
+    }
+    return;
+  }
+  const item = mem().review_queue.find((x) => x.reply_id === replyId);
+  if (item) item.status = decision;
+  const reply = mem().replies.find((r) => r.id === replyId);
+  if (reply) reply.visibility = decision === 'approved' ? 'public' : 'hidden';
+}
+
+// ===== Reactions =====
+
+export async function react(replyId: string, userId: string, value: 1 | -1): Promise<Reply | null> {
+  if (usingDB()) {
+    await supabaseAdmin()
+      .from('reactions')
+      .upsert({ reply_id: replyId, user_id: userId, value }, { onConflict: 'reply_id,user_id' });
+    await supabaseAdmin().rpc('recalc_reply_reactions', { r_id: replyId }).throwOnError();
+    return await getReply(replyId);
+  }
+  const existing = mem().reactions.find((r) => r.reply_id === replyId && r.user_id === userId);
+  if (existing) existing.value = value;
+  else mem().reactions.push({ id: randomUUID(), reply_id: replyId, user_id: userId, value, created_at: new Date().toISOString() });
+  const reply = mem().replies.find((r) => r.id === replyId);
+  if (reply) {
+    reply.up_count = mem().reactions.filter((r) => r.reply_id === replyId && r.value === 1).length;
+    reply.down_count = mem().reactions.filter((r) => r.reply_id === replyId && r.value === -1).length;
+  }
+  return reply ?? null;
+}
+
+// ===== Listings =====
+
+export async function listListings(filter?: { category?: string }): Promise<Listing[]> {
+  if (usingDB()) {
+    let q = supabaseAdmin().from('listings').select('*').order('created_at', { ascending: false }).limit(100);
+    if (filter?.category) q = q.eq('category', filter.category);
+    const { data, error } = await q;
+    if (error) throw error;
+    return (data ?? []).map(mapListing);
+  }
+  let items = [...mem().listings];
   if (filter?.category) items = items.filter((l) => l.category === filter.category);
   return items.sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
-export function getListing(id: string): Listing | null {
-  return db().listings.find((l) => l.id === id) ?? null;
+
+export async function getListing(id: string): Promise<Listing | null> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin().from('listings').select('*').eq('id', id).maybeSingle();
+    if (error) throw error;
+    return data ? mapListing(data) : null;
+  }
+  return mem().listings.find((l) => l.id === id) ?? null;
 }
-export function createListing(input: Omit<Listing, 'id' | 'created_at' | 'bid_count' | 'top_bid_cents' | 'status'>): Listing {
+
+export async function createListing(input: Omit<Listing, 'id' | 'created_at' | 'bid_count' | 'top_bid_cents' | 'status'>): Promise<Listing> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin()
+      .from('listings')
+      .insert({
+        seller_id: input.seller_id,
+        seller_name: input.seller_name,
+        category: input.category,
+        title: input.title,
+        description: input.description,
+        asking_price_cents: input.asking_price_cents,
+        currency: input.currency,
+        location: input.location,
+        images: input.images,
+      })
+      .select('*')
+      .single();
+    if (error) throw error;
+    return mapListing(data);
+  }
   const l: Listing = {
     ...input,
     id: randomUUID(),
@@ -192,38 +495,238 @@ export function createListing(input: Omit<Listing, 'id' | 'created_at' | 'bid_co
     bid_count: 0,
     top_bid_cents: null,
   };
-  db().listings.push(l);
+  mem().listings.push(l);
   return l;
 }
 
-// Bids
-export function listBids(listingId: string): Bid[] {
-  return db()
+export async function updateListingStatus(id: string, status: Listing['status']): Promise<Listing | null> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin()
+      .from('listings')
+      .update({ status })
+      .eq('id', id)
+      .select('*')
+      .maybeSingle();
+    if (error) throw error;
+    return data ? mapListing(data) : null;
+  }
+  const l = mem().listings.find((x) => x.id === id);
+  if (l) l.status = status;
+  return l ?? null;
+}
+
+// ===== Bids =====
+
+export async function listBids(listingId: string): Promise<Bid[]> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin()
+      .from('bids')
+      .select('*')
+      .eq('listing_id', listingId)
+      .order('amount_cents', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(mapBid);
+  }
+  return mem()
     .bids.filter((b) => b.listing_id === listingId)
     .sort((a, b) => b.amount_cents - a.amount_cents);
 }
-export function createBid(input: {
+
+export async function getBid(id: string): Promise<Bid | null> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin().from('bids').select('*').eq('id', id).maybeSingle();
+    if (error) throw error;
+    return data ? mapBid(data) : null;
+  }
+  return mem().bids.find((b) => b.id === id) ?? null;
+}
+
+export async function createBid(input: {
   listing_id: string;
+  bidder_id?: string;
   bidder_name: string;
   amount_cents: number;
   message?: string | null;
-}): Bid | null {
-  const listing = getListing(input.listing_id);
+}): Promise<Bid | null> {
+  const listing = await getListing(input.listing_id);
   if (!listing || listing.status !== 'open') return null;
+  const bidderId = input.bidder_id ?? `guest-bidder-${randomUUID()}`;
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin()
+      .from('bids')
+      .insert({
+        listing_id: input.listing_id,
+        bidder_id: bidderId,
+        bidder_name: input.bidder_name,
+        amount_cents: input.amount_cents,
+        message: input.message ?? null,
+      })
+      .select('*')
+      .single();
+    if (error) throw error;
+    return mapBid(data);
+  }
   const b: Bid = {
     id: randomUUID(),
     listing_id: input.listing_id,
-    bidder_id: 'demo-bidder-' + Math.random().toString(36).slice(2, 8),
+    bidder_id: bidderId,
     bidder_name: input.bidder_name,
     amount_cents: input.amount_cents,
     message: input.message ?? null,
     status: 'active',
     created_at: new Date().toISOString(),
   };
-  db().bids.push(b);
-  listing.bid_count += 1;
-  if (listing.top_bid_cents === null || input.amount_cents > listing.top_bid_cents) {
-    listing.top_bid_cents = input.amount_cents;
+  mem().bids.push(b);
+  const l = mem().listings.find((x) => x.id === input.listing_id);
+  if (l) {
+    l.bid_count += 1;
+    if (l.top_bid_cents === null || input.amount_cents > l.top_bid_cents) l.top_bid_cents = input.amount_cents;
   }
   return b;
+}
+
+export async function acceptBid(bidId: string): Promise<{ transaction: Transaction; listing: Listing } | null> {
+  const bid = await getBid(bidId);
+  if (!bid) return null;
+  const listing = await getListing(bid.listing_id);
+  if (!listing || listing.status !== 'open') return null;
+
+  if (usingDB()) {
+    const { data: tx, error: txErr } = await supabaseAdmin()
+      .from('transactions')
+      .insert({
+        listing_id: listing.id,
+        winning_bid_id: bid.id,
+        seller_id: listing.seller_id,
+        buyer_id: bid.bidder_id,
+        seller_name: listing.seller_name,
+        buyer_name: bid.bidder_name,
+        amount_cents: bid.amount_cents,
+        status: 'pending',
+      })
+      .select('*')
+      .single();
+    if (txErr) throw txErr;
+    await supabaseAdmin().from('bids').update({ status: 'accepted' }).eq('id', bid.id);
+    await supabaseAdmin().from('bids').update({ status: 'rejected' }).eq('listing_id', listing.id).neq('id', bid.id).eq('status', 'active');
+    await supabaseAdmin().from('listings').update({ status: 'pending' }).eq('id', listing.id);
+    const updated = await getListing(listing.id);
+    return { transaction: mapTransaction(tx), listing: updated! };
+  }
+  const tx: Transaction = {
+    id: randomUUID(),
+    listing_id: listing.id,
+    winning_bid_id: bid.id,
+    seller_id: listing.seller_id,
+    buyer_id: bid.bidder_id,
+    seller_name: listing.seller_name,
+    buyer_name: bid.bidder_name,
+    amount_cents: bid.amount_cents,
+    status: 'pending',
+    created_at: new Date().toISOString(),
+  };
+  mem().transactions.push(tx);
+  for (const b of mem().bids.filter((x) => x.listing_id === listing.id)) {
+    b.status = b.id === bid.id ? 'accepted' : 'rejected';
+  }
+  const l = mem().listings.find((x) => x.id === listing.id);
+  if (l) l.status = 'pending';
+  return { transaction: tx, listing: l! };
+}
+
+// ===== Transactions & Messages =====
+
+function mapTransaction(row: any): Transaction {
+  return {
+    id: row.id,
+    listing_id: row.listing_id,
+    winning_bid_id: row.winning_bid_id,
+    seller_id: row.seller_id ?? '',
+    buyer_id: row.buyer_id ?? '',
+    seller_name: row.seller_name ?? 'Seller',
+    buyer_name: row.buyer_name ?? 'Buyer',
+    amount_cents: row.amount_cents,
+    status: row.status,
+    created_at: row.created_at,
+  };
+}
+function mapMessage(row: any): Message {
+  return {
+    id: row.id,
+    transaction_id: row.transaction_id,
+    sender_id: row.sender_id ?? '',
+    sender_name: row.sender_name ?? 'Anonymous',
+    content: row.content,
+    created_at: row.created_at,
+  };
+}
+
+export async function getTransactionByListing(listingId: string): Promise<Transaction | null> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin()
+      .from('transactions')
+      .select('*')
+      .eq('listing_id', listingId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? mapTransaction(data) : null;
+  }
+  return mem().transactions.find((t) => t.listing_id === listingId) ?? null;
+}
+
+export async function getTransaction(id: string): Promise<Transaction | null> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin().from('transactions').select('*').eq('id', id).maybeSingle();
+    if (error) throw error;
+    return data ? mapTransaction(data) : null;
+  }
+  return mem().transactions.find((t) => t.id === id) ?? null;
+}
+
+export async function listMessages(transactionId: string): Promise<Message[]> {
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin()
+      .from('messages')
+      .select('*')
+      .eq('transaction_id', transactionId)
+      .order('created_at', { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map(mapMessage);
+  }
+  return mem().messages.filter((m) => m.transaction_id === transactionId);
+}
+
+export async function createMessage(input: {
+  transaction_id: string;
+  sender_id?: string;
+  sender_name: string;
+  content: string;
+}): Promise<Message> {
+  const senderId = input.sender_id ?? `user-${Math.random().toString(36).slice(2, 8)}`;
+  if (usingDB()) {
+    const { data, error } = await supabaseAdmin()
+      .from('messages')
+      .insert({
+        transaction_id: input.transaction_id,
+        sender_id: senderId,
+        sender_name: input.sender_name,
+        content: input.content,
+      })
+      .select('*')
+      .single();
+    if (error) throw error;
+    return mapMessage(data);
+  }
+  const m: Message = {
+    id: randomUUID(),
+    transaction_id: input.transaction_id,
+    sender_id: senderId,
+    sender_name: input.sender_name,
+    content: input.content,
+    created_at: new Date().toISOString(),
+  };
+  mem().messages.push(m);
+  return m;
 }

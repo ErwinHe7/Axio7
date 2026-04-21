@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles, X } from 'lucide-react';
 
-const CATEGORIES = ['sublet', 'furniture', 'electronics', 'books', 'services', 'other'] as const;
+const CATEGORIES = ['sublet', 'furniture', 'electronics', 'books', 'services', 'tickets', 'tutoring', 'other'] as const;
 
 export function ListingComposer() {
   const [form, setForm] = useState({
@@ -15,9 +15,61 @@ export function ListingComposer() {
     asking_price: '',
     location: '',
   });
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [newImageUrl, setNewImageUrl] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [drafting, setDrafting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hint, setHint] = useState('');
   const router = useRouter();
+
+  async function aiDraft() {
+    if (!hint.trim()) {
+      setError('Type a short hint first (e.g. "Sony WH-1000XM5, like new")');
+      return;
+    }
+    setError(null);
+    setDrafting(true);
+    try {
+      const res = await fetch('/api/listings/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hint: hint.trim(), category: form.category }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: 'failed' }));
+        setError(error);
+        return;
+      }
+      const { title, description, suggested_price_cents } = await res.json();
+      setForm((f) => ({
+        ...f,
+        title: title || f.title,
+        description: description || f.description,
+        asking_price: suggested_price_cents ? (suggested_price_cents / 100).toFixed(0) : f.asking_price,
+      }));
+    } finally {
+      setDrafting(false);
+    }
+  }
+
+  function addImage() {
+    const u = newImageUrl.trim();
+    if (!u) return;
+    try {
+      new URL(u);
+    } catch {
+      setError('Image must be a full URL (https://…)');
+      return;
+    }
+    if (imageUrls.length >= 6) {
+      setError('Max 6 images');
+      return;
+    }
+    setError(null);
+    setImageUrls([...imageUrls, u]);
+    setNewImageUrl('');
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,6 +91,7 @@ export function ListingComposer() {
           description: form.description.trim(),
           asking_price_cents: Math.round(dollars * 100),
           location: form.location.trim() || undefined,
+          images: imageUrls,
         }),
       });
       if (!res.ok) {
@@ -55,6 +108,29 @@ export function ListingComposer() {
 
   return (
     <form onSubmit={submit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-lg border border-accent/30 bg-accent-soft/40 p-3">
+        <label className="block text-xs font-medium text-accent">
+          <Sparkles className="mr-1 inline-block h-3.5 w-3.5" /> AI Draft (describe your item in a sentence)
+        </label>
+        <div className="mt-1 flex gap-2">
+          <input
+            value={hint}
+            onChange={(e) => setHint(e.target.value)}
+            placeholder="Sony WH-1000XM5, used 6 months, great condition"
+            className="flex-1 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm focus:border-ink focus:outline-none"
+          />
+          <button
+            type="button"
+            onClick={aiDraft}
+            disabled={drafting}
+            className="inline-flex items-center gap-1 rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent/90 disabled:opacity-50"
+          >
+            {drafting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            Draft
+          </button>
+        </div>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Your name">
           <input
@@ -118,6 +194,44 @@ export function ListingComposer() {
             className="input"
           />
         </Field>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-ink">Images (URLs)</label>
+        <div className="mt-1 flex gap-2">
+          <input
+            value={newImageUrl}
+            onChange={(e) => setNewImageUrl(e.target.value)}
+            placeholder="https://i.imgur.com/example.jpg"
+            className="input flex-1"
+          />
+          <button
+            type="button"
+            onClick={addImage}
+            className="rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:border-ink"
+          >
+            Add
+          </button>
+        </div>
+        {imageUrls.length > 0 && (
+          <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {imageUrls.map((u, i) => (
+              <div key={u} className="relative">
+                <img src={u} alt="" className="aspect-square w-full rounded-md border border-slate-200 object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setImageUrls(imageUrls.filter((_, idx) => idx !== i))}
+                  className="absolute -right-1 -top-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-rose-600 shadow"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <p className="mt-1 text-[11px] text-ink-muted">
+          Paste direct image URLs (from Imgur, GitHub, etc). File upload needs Supabase Storage — see README.
+        </p>
       </div>
 
       {error && <div className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}

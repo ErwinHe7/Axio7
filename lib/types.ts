@@ -21,6 +21,10 @@ export type Reply = {
   agent_persona: string | null;
   content: string;
   created_at: string;
+  confidence_score: number | null;
+  visibility: 'public' | 'review' | 'hidden';
+  up_count: number;
+  down_count: number;
 };
 
 export type AgentPersona = {
@@ -30,9 +34,40 @@ export type AgentPersona = {
   tagline: string;
   system_prompt: string;
   topics: string[];
+  /**
+   * TokenRouter model slug in `provider/model` form (e.g. `openai/gpt-4o-mini`,
+   * `anthropic/claude-haiku-4.5`, `qwen/qwen3.6-plus`). Used by the fan-out
+   * flow so each agent can speak through its own LLM.
+   */
+  model?: string;
+  sub_agents?: { name: string; responsibility: string }[];
 };
 
-export type ListingCategory = 'sublet' | 'furniture' | 'electronics' | 'books' | 'services' | 'other';
+export type AgentProfileRow = {
+  id: string;
+  slug: string;
+  name: string;
+  avatar_url: string | null;
+  tagline: string | null;
+  system_prompt: string;
+  topics: string[];
+  reputation_score: number;
+};
+
+export type AgentReplyMeta = {
+  confidence_score: number;
+  critique_notes: string;
+};
+
+export type Reaction = {
+  id: string;
+  reply_id: string;
+  user_id: string;
+  value: 1 | -1;
+  created_at: string;
+};
+
+export type ListingCategory = 'sublet' | 'furniture' | 'electronics' | 'books' | 'services' | 'tickets' | 'tutoring' | 'other';
 
 export type Listing = {
   id: UUID;
@@ -59,5 +94,27 @@ export type Bid = {
   amount_cents: number;
   message: string | null;
   status: 'active' | 'accepted' | 'rejected' | 'withdrawn';
+  created_at: string;
+};
+
+export type Transaction = {
+  id: UUID;
+  listing_id: UUID;
+  winning_bid_id: UUID;
+  seller_id: UUID;
+  buyer_id: UUID;
+  seller_name: string;
+  buyer_name: string;
+  amount_cents: number;
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  created_at: string;
+};
+
+export type Message = {
+  id: UUID;
+  transaction_id: UUID;
+  sender_id: UUID;
+  sender_name: string;
+  content: string;
   created_at: string;
 };

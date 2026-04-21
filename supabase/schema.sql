@@ -1,20 +1,18 @@
--- Aximoas — Supabase schema (run in the Supabase SQL editor once your project is created).
--- In-memory store (lib/store.ts) ships as the default so the app runs without this step.
--- Swap in a Supabase-backed store when ready.
+-- Aximoas — Supabase schema (v0.3).
+-- Run once in the Supabase SQL editor after creating your project.
+-- This schema is MVP-friendly: no hard FK to auth.users, so the app runs even
+-- without Supabase Auth configured (we use text-based pseudo-IDs for demo users).
+-- Add stricter auth-based RLS in a follow-up migration when you wire up auth.
 
 create extension if not exists "pgcrypto";
 
--- Profiles: mirrors auth.users with public-facing name/avatar.
-create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  display_name text not null default 'Anonymous',
-  avatar_url text,
-  created_at timestamptz not null default now()
-);
+-- ================ Posts / Replies ================
 
 create table if not exists public.posts (
   id uuid primary key default gen_random_uuid(),
-  author_id uuid not null references public.profiles(id) on delete cascade,
+  author_id text not null,
+  author_name text not null default 'Anonymous',
+  author_avatar text,
   content text not null check (char_length(content) between 1 and 2000),
   like_count int not null default 0,
   reply_count int not null default 0,
@@ -22,25 +20,96 @@ create table if not exists public.posts (
 );
 create index if not exists posts_created_idx on public.posts (created_at desc);
 
-create type reply_author_kind as enum ('human', 'agent');
+do $$ begin
+  create type reply_author_kind as enum ('human', 'agent');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type reply_visibility as enum ('public', 'review', 'hidden');
+exception when duplicate_object then null; end $$;
 
 create table if not exists public.replies (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.posts(id) on delete cascade,
   author_kind reply_author_kind not null,
-  author_id uuid references public.profiles(id) on delete set null,
+  author_id text,
+  author_name text not null default 'Agent',
+  author_avatar text,
   agent_persona text,
   content text not null,
+  confidence_score numeric,
+  visibility reply_visibility not null default 'public',
+  up_count int not null default 0,
+  down_count int not null default 0,
   created_at timestamptz not null default now()
 );
 create index if not exists replies_post_idx on public.replies (post_id, created_at);
+create index if not exists replies_visibility_idx on public.replies (visibility);
 
-create type listing_category as enum ('sublet', 'furniture', 'electronics', 'books', 'services', 'other');
-create type listing_status as enum ('open', 'pending', 'sold', 'withdrawn');
+-- ================ Reactions ================
+
+create table if not exists public.reactions (
+  id uuid primary key default gen_random_uuid(),
+  reply_id uuid not null references public.replies(id) on delete cascade,
+  user_id text not null,
+  value smallint not null check (value in (-1, 1)),
+  created_at timestamptz not null default now(),
+  unique (reply_id, user_id)
+);
+
+-- ================ Post likes (dedupe) ================
+
+create table if not exists public.post_likes (
+  post_id uuid not null references public.posts(id) on delete cascade,
+  user_id text not null,
+  created_at timestamptz not null default now(),
+  primary key (post_id, user_id)
+);
+
+-- ================ Review queue ================
+
+do $$ begin
+  create type review_status as enum ('open', 'approved', 'rejected');
+exception when duplicate_object then null; end $$;
+
+create table if not exists public.review_queue (
+  id uuid primary key default gen_random_uuid(),
+  reply_id uuid not null references public.replies(id) on delete cascade,
+  reason text not null,
+  status review_status not null default 'open',
+  created_at timestamptz not null default now()
+);
+
+-- ================ Agent profiles (optional — canonical source is lib/agents.ts for MVP) ================
+
+create table if not exists public.agent_profiles (
+  id uuid primary key default gen_random_uuid(),
+  slug text unique not null,
+  name text not null,
+  avatar_url text,
+  tagline text,
+  system_prompt text not null,
+  topics text[] not null default '{}',
+  reputation_score numeric not null default 0,
+  up_count int not null default 0,
+  down_count int not null default 0,
+  created_at timestamptz not null default now()
+);
+
+-- ================ Listings / Bids ================
+
+do $$ begin
+  create type listing_category as enum ('sublet', 'furniture', 'electronics', 'books', 'services', 'tickets', 'tutoring', 'other');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type listing_status as enum ('open', 'pending', 'sold', 'withdrawn');
+exception when duplicate_object then null; end $$;
 
 create table if not exists public.listings (
   id uuid primary key default gen_random_uuid(),
-  seller_id uuid not null references public.profiles(id) on delete cascade,
+  seller_id text not null,
+  seller_name text not null default 'Anonymous',
   category listing_category not null,
   title text not null check (char_length(title) between 1 and 140),
   description text not null,
@@ -55,12 +124,15 @@ create table if not exists public.listings (
 );
 create index if not exists listings_category_idx on public.listings (category, created_at desc);
 
-create type bid_status as enum ('active', 'accepted', 'rejected', 'withdrawn');
+do $$ begin
+  create type bid_status as enum ('active', 'accepted', 'rejected', 'withdrawn');
+exception when duplicate_object then null; end $$;
 
 create table if not exists public.bids (
   id uuid primary key default gen_random_uuid(),
   listing_id uuid not null references public.listings(id) on delete cascade,
-  bidder_id uuid not null references public.profiles(id) on delete cascade,
+  bidder_id text not null,
+  bidder_name text not null default 'Anonymous',
   amount_cents int not null check (amount_cents > 0),
   message text,
   status bid_status not null default 'active',
@@ -68,7 +140,7 @@ create table if not exists public.bids (
 );
 create index if not exists bids_listing_idx on public.bids (listing_id, amount_cents desc);
 
--- Keep listing.bid_count / top_bid_cents in sync.
+-- Keep listing.bid_count / top_bid_cents in sync with active bids.
 create or replace function public.update_listing_bid_stats() returns trigger as $$
 begin
   update public.listings l
@@ -85,36 +157,121 @@ create trigger bids_stats_trigger
 after insert or update or delete on public.bids
 for each row execute function public.update_listing_bid_stats();
 
--- RLS
-alter table public.profiles enable row level security;
-alter table public.posts enable row level security;
-alter table public.replies enable row level security;
-alter table public.listings enable row level security;
-alter table public.bids enable row level security;
+-- ================ Transactions & Messages ================
 
--- Profiles: anyone can read; user manages their own row.
-create policy "profiles read" on public.profiles for select using (true);
-create policy "profiles self insert" on public.profiles for insert with check (auth.uid() = id);
-create policy "profiles self update" on public.profiles for update using (auth.uid() = id);
+do $$ begin
+  create type transaction_status as enum ('pending', 'confirmed', 'cancelled', 'completed');
+exception when duplicate_object then null; end $$;
 
--- Posts: anyone can read; author writes their own.
-create policy "posts read" on public.posts for select using (true);
-create policy "posts author insert" on public.posts for insert with check (auth.uid() = author_id);
-create policy "posts author update" on public.posts for update using (auth.uid() = author_id);
-create policy "posts author delete" on public.posts for delete using (auth.uid() = author_id);
+create table if not exists public.transactions (
+  id uuid primary key default gen_random_uuid(),
+  listing_id uuid not null references public.listings(id) on delete cascade,
+  winning_bid_id uuid not null references public.bids(id) on delete cascade,
+  seller_id text not null,
+  buyer_id text not null,
+  seller_name text not null default 'Seller',
+  buyer_name text not null default 'Buyer',
+  amount_cents int not null,
+  status transaction_status not null default 'pending',
+  created_at timestamptz not null default now()
+);
+create index if not exists transactions_listing_idx on public.transactions (listing_id);
 
--- Replies: anyone reads. Humans write their own. Agent replies are inserted via service role only.
-create policy "replies read" on public.replies for select using (true);
-create policy "replies human insert" on public.replies for insert
-  with check (author_kind = 'human' and auth.uid() = author_id);
+create table if not exists public.messages (
+  id uuid primary key default gen_random_uuid(),
+  transaction_id uuid not null references public.transactions(id) on delete cascade,
+  sender_id text not null,
+  sender_name text not null default 'Anonymous',
+  content text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists messages_transaction_idx on public.messages (transaction_id, created_at);
 
--- Listings: anyone reads; seller manages own.
-create policy "listings read" on public.listings for select using (true);
-create policy "listings seller insert" on public.listings for insert with check (auth.uid() = seller_id);
-create policy "listings seller update" on public.listings for update using (auth.uid() = seller_id);
-create policy "listings seller delete" on public.listings for delete using (auth.uid() = seller_id);
+-- ================ Knowledge chunks (optional — enable pgvector if you want semantic search) ================
+-- If you don't want to enable pgvector, skip this block; the app will fall back to BM25-style text search.
 
--- Bids: anyone reads; bidder manages own.
-create policy "bids read" on public.bids for select using (true);
-create policy "bids bidder insert" on public.bids for insert with check (auth.uid() = bidder_id);
-create policy "bids bidder update" on public.bids for update using (auth.uid() = bidder_id);
+do $$
+begin
+  if exists (select 1 from pg_available_extensions where name = 'vector') then
+    execute 'create extension if not exists vector';
+    execute $$
+      create table if not exists public.knowledge_chunks (
+        id uuid primary key default gen_random_uuid(),
+        source_kind text not null,
+        source_id uuid,
+        content text not null,
+        embedding vector(1536),
+        created_at timestamptz not null default now()
+      )
+    $$;
+    -- ivfflat needs at least 100 rows for lists=100; use lists=1 until data grows.
+    begin
+      execute 'create index if not exists knowledge_embedding_idx on public.knowledge_chunks using ivfflat (embedding vector_cosine_ops) with (lists = 1)';
+    exception when others then null; end;
+  end if;
+end $$;
+
+-- Always create the chunks table even without pgvector so the code paths work.
+create table if not exists public.knowledge_chunks (
+  id uuid primary key default gen_random_uuid(),
+  source_kind text not null,
+  source_id uuid,
+  content text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists knowledge_chunks_content_trgm on public.knowledge_chunks using gin (to_tsvector('english', content));
+
+-- ================ Helper RPCs used by lib/store.ts ================
+
+create or replace function public.increment_post_reply(p_id uuid) returns void as $$
+begin
+  update public.posts set reply_count = reply_count + 1 where id = p_id;
+end; $$ language plpgsql;
+
+create or replace function public.increment_post_like(p_id uuid) returns void as $$
+begin
+  update public.posts set like_count = like_count + 1 where id = p_id;
+end; $$ language plpgsql;
+
+create or replace function public.decrement_post_like(p_id uuid) returns void as $$
+begin
+  update public.posts set like_count = greatest(0, like_count - 1) where id = p_id;
+end; $$ language plpgsql;
+
+create or replace function public.recalc_reply_reactions(r_id uuid) returns void as $$
+begin
+  update public.replies
+  set
+    up_count   = (select count(*) from public.reactions where reply_id = r_id and value = 1),
+    down_count = (select count(*) from public.reactions where reply_id = r_id and value = -1)
+  where id = r_id;
+end; $$ language plpgsql;
+
+-- Simple keyword search over knowledge_chunks (pgvector-free fallback).
+create or replace function public.search_chunks(q text, lim int default 3)
+returns setof public.knowledge_chunks as $$
+  select *
+  from public.knowledge_chunks
+  where to_tsvector('english', content) @@ plainto_tsquery('english', q)
+  order by created_at desc
+  limit lim;
+$$ language sql stable;
+
+-- ================ Seed data (runs only if tables are empty) ================
+
+insert into public.posts (author_id, author_name, author_avatar, content, like_count)
+select 'demo-seed-1', 'Demo Human', 'https://api.dicebear.com/9.x/thumbs/svg?seed=Demo',
+       'Just moved to Morningside Heights for a Columbia PhD. Rent is brutal — any tips on actually-affordable sublets that don''t require a broker fee?',
+       12
+where not exists (select 1 from public.posts limit 1);
+
+insert into public.listings (seller_id, seller_name, category, title, description, asking_price_cents, location, images)
+select 'demo-seed-1', 'Demo Human', 'furniture', 'IKEA Malm desk + chair (barely used)',
+       'Selling my desk + chair as I move out. Pickup in Morningside Heights.', 12000, 'Morningside Heights, NYC', '[]'::jsonb
+where not exists (select 1 from public.listings limit 1);
+
+-- ================ RLS ================
+-- For MVP (no auth wired up yet) we keep RLS disabled and rely on the service role key
+-- in API routes. Once Supabase Auth is added, turn on RLS and add per-table policies.
+-- alter table public.posts enable row level security;
+-- (etc — add policies in a follow-up migration.)

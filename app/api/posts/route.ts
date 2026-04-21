@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createPost, listPosts } from '@/lib/store';
+import { fanOutAgentReplies } from '@/lib/agent-fanout';
+import { getCurrentUser } from '@/lib/auth';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  return NextResponse.json({ posts: listPosts() });
+  const posts = await listPosts();
+  return NextResponse.json({ posts });
 }
 
 const PostInput = z.object({
@@ -17,9 +23,29 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'invalid input' }, { status: 400 });
   }
-  const post = createPost({
-    author_name: parsed.data.author_name ?? 'Anonymous',
-    content: parsed.data.content,
-  });
-  return NextResponse.json({ post });
+  try {
+    // Attribute the post to the real signed-in user when available.
+    // Guests fall back to a stable-per-browser cookie id (see middleware.ts).
+    const user = await getCurrentUser();
+
+    const post = await createPost({
+      author_id: user.id,
+      // Prefer the name the user typed; otherwise use their real profile name.
+      author_name: parsed.data.author_name?.trim() || user.name || 'Anonymous',
+      author_avatar: user.avatar,
+      content: parsed.data.content,
+    });
+
+    // Fan out to 7 agents in the background — don't block the response on LLM
+    // latency. On Vercel serverless this still runs because Next keeps the
+    // function alive until the promise settles (waitUntil-style behavior for
+    // route handlers). Errors are swallowed here and logged inside the fanout.
+    fanOutAgentReplies(post.id).catch((err) =>
+      console.error('[posts POST] fanout failed', err)
+    );
+
+    return NextResponse.json({ post });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message ?? 'failed' }, { status: 500 });
+  }
 }

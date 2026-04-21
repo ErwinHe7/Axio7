@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Home as HomeIcon, Plus, Sofa, Smartphone, BookOpen, Hammer, Package } from 'lucide-react';
+import { Home as HomeIcon, Plus, Sofa, Smartphone, BookOpen, Hammer, Package, Ticket, GraduationCap } from 'lucide-react';
 import { listListings } from '@/lib/store';
 import { ListingCard } from '@/components/ListingCard';
 
@@ -11,17 +11,19 @@ const CATEGORIES = [
   { id: 'furniture', label: 'Furniture', icon: Sofa, href: '/trade?category=furniture' },
   { id: 'electronics', label: 'Electronics', icon: Smartphone, href: '/trade?category=electronics' },
   { id: 'books', label: 'Books', icon: BookOpen, href: '/trade?category=books' },
+  { id: 'tickets', label: 'Tickets', icon: Ticket, href: '/trade?category=tickets' },
+  { id: 'tutoring', label: 'Tutoring', icon: GraduationCap, href: '/trade?category=tutoring' },
   { id: 'services', label: 'Services', icon: Hammer, href: '/trade?category=services' },
   { id: 'other', label: 'Other', icon: Package, href: '/trade?category=other' },
 ] as const;
 
-export default function TradePage({
+export default async function TradePage({
   searchParams,
 }: {
   searchParams?: { category?: string };
 }) {
   const category = searchParams?.category;
-  const listings = listListings({ category });
+  const listings = await listListings({ category });
 
   return (
     <div className="space-y-6">
@@ -40,12 +42,12 @@ export default function TradePage({
         </Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-7">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-9">
         {CATEGORIES.map((c) => (
           <Link
             key={c.id}
             href={c.href}
-            className={`flex flex-col items-center gap-1 rounded-lg border px-3 py-3 text-center text-xs transition ${
+            className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-3 text-center text-xs transition ${
               category === c.id ? 'border-ink bg-ink text-white' : 'border-slate-200 bg-white text-ink-muted hover:border-ink/30 hover:text-ink'
             }`}
           >
@@ -58,9 +60,7 @@ export default function TradePage({
       {category && (
         <div className="text-sm text-ink-muted">
           Filtered by <span className="font-medium text-ink">{category}</span> ·{' '}
-          <Link href="/trade" className="underline">
-            clear
-          </Link>
+          <Link href="/trade" className="underline">clear</Link>
         </div>
       )}
 

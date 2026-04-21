@@ -9,6 +9,8 @@ const CATEGORY_COLOR: Record<Listing['category'], string> = {
   electronics: 'bg-violet-50 text-violet-700',
   books: 'bg-emerald-50 text-emerald-700',
   services: 'bg-pink-50 text-pink-700',
+  tickets: 'bg-rose-50 text-rose-700',
+  tutoring: 'bg-teal-50 text-teal-700',
   other: 'bg-slate-100 text-slate-700',
 };
 

@@ -21,17 +21,16 @@ export function PostComposer() {
         body: JSON.stringify({ author_name: name.trim() || 'Anonymous', content: content.trim() }),
       });
       if (!res.ok) throw new Error('post failed');
-      const { post } = await res.json();
+      await res.json();
 
-      // Kick off the agent reply — don't block UI on completion.
-      fetch('/api/agent-reply', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ post_id: post.id }),
-      }).then(() => router.refresh());
-
+      // Server fans out to 7 agents in the background. Refresh immediately so
+      // the post shows up, then again a few seconds later so the agent replies
+      // pop in once they land in the DB. (Realtime subscription replaces this
+      // polling in a later phase.)
       setContent('');
       router.refresh();
+      setTimeout(() => router.refresh(), 4000);
+      setTimeout(() => router.refresh(), 9000);
     } finally {
       setSubmitting(false);
     }
@@ -57,7 +56,7 @@ export function PostComposer() {
       />
       <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-3">
         <span className="text-xs text-ink-muted">
-          An AI will choose a persona and reply automatically.
+          7 agents will weigh in automatically — each with its own voice & model.
         </span>
         <button
           type="submit"

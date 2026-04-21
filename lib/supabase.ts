@@ -1,15 +1,17 @@
-import { createBrowserClient, createServerClient, type CookieOptions } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// NOTE: browser client lives in lib/supabase-browser.ts so client components
+// never pull in `next/headers` (which is server-only).
 
-export function supabaseBrowser() {
-  return createBrowserClient(url, anonKey);
+export function isSupabaseConfigured(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
 export function supabaseServer() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   const cookieStore = cookies();
   return createServerClient(url, anonKey, {
     cookies: {
@@ -20,7 +22,7 @@ export function supabaseServer() {
         try {
           cookieStore.set({ name, value, ...options });
         } catch {
-          // ignored in route handlers where cookies() is readonly
+          // readonly in route handlers
         }
       },
       remove(name: string, options: CookieOptions) {
@@ -34,9 +36,14 @@ export function supabaseServer() {
   });
 }
 
-export function supabaseAdmin() {
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  return createClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+let adminClient: SupabaseClient | null = null;
+export function supabaseAdmin(): SupabaseClient {
+  if (!adminClient) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    adminClient = createClient(url, serviceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+  }
+  return adminClient;
 }
