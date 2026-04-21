@@ -6,7 +6,6 @@ import { getCurrentUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-// Allow up to 60s so fan-out (7 LLM calls) can complete before Vercel cuts the function.
 export const maxDuration = 60;
 
 export async function GET() {
@@ -42,16 +41,17 @@ export async function POST(req: Request) {
       images: parsed.data.images ?? [],
     });
 
-    // Await fan-out directly. maxDuration=60 gives us time to run all 7 agents.
-    // This means the POST response takes ~5-15s but the client doesn't need to
-    // wait — PostComposer fires and forgets, then polls via router.refresh().
-    fanOutAgentReplies(post.id).catch((err) =>
-      console.error('[posts POST] fanout failed', err)
-    );
+    // Await fan-out so Vercel doesn't terminate the function before agents write replies.
+    // maxDuration=60 gives enough time. The client (PostComposer) fires this and refreshes
+    // via router.refresh() — it doesn't block on the response time.
+    const result = await fanOutAgentReplies(post.id).catch((err) => {
+      console.error('[posts POST] fanout failed', err);
+      return { succeeded: 0, failed: 7 };
+    });
 
-    // Return immediately — fan-out runs concurrently and Vercel keeps the function
-    // alive until all pending promises settle (within maxDuration).
-    return NextResponse.json({ post });
+    console.log(`[posts POST] fanout: ${result.succeeded}/${result.succeeded + result.failed} agents replied`);
+
+    return NextResponse.json({ post, fanout: result });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? 'failed' }, { status: 500 });
   }
