@@ -187,29 +187,23 @@ create table if not exists public.messages (
 );
 create index if not exists messages_transaction_idx on public.messages (transaction_id, created_at);
 
--- ================ Knowledge chunks (optional — enable pgvector if you want semantic search) ================
--- If you don't want to enable pgvector, skip this block; the app will fall back to BM25-style text search.
+-- ================ Knowledge chunks (with pgvector for semantic search) ================
 
-do $$
+create table if not exists public.knowledge_chunks (
+  id uuid primary key default gen_random_uuid(),
+  source_kind text not null,
+  source_id uuid,
+  content text not null,
+  embedding vector(1536),
+  created_at timestamptz not null default now()
+);
+
+do $outer$
 begin
-  if exists (select 1 from pg_available_extensions where name = 'vector') then
-    execute 'create extension if not exists vector';
-    execute $$
-      create table if not exists public.knowledge_chunks (
-        id uuid primary key default gen_random_uuid(),
-        source_kind text not null,
-        source_id uuid,
-        content text not null,
-        embedding vector(1536),
-        created_at timestamptz not null default now()
-      )
-    $$;
-    -- ivfflat needs at least 100 rows for lists=100; use lists=1 until data grows.
-    begin
-      execute 'create index if not exists knowledge_embedding_idx on public.knowledge_chunks using ivfflat (embedding vector_cosine_ops) with (lists = 1)';
-    exception when others then null; end;
-  end if;
-end $$;
+  create index if not exists knowledge_embedding_idx
+    on public.knowledge_chunks using ivfflat (embedding vector_cosine_ops) with (lists = 1);
+exception when others then null;
+end $outer$;
 
 -- Always create the chunks table even without pgvector so the code paths work.
 create table if not exists public.knowledge_chunks (

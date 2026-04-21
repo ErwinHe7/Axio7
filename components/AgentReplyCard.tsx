@@ -56,6 +56,11 @@ export function AgentReplyCard({ reply }: { reply: Reply }) {
           <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${tone.cls}`}>
             {tone.label}
           </span>
+          {agent?.model && (
+            <span className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-500">
+              {agent.model}
+            </span>
+          )}
           {reply.visibility === 'review' && (
             <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700">
               in review

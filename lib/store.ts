@@ -37,6 +37,7 @@ function seed(): DB {
       author_avatar: seedUser.avatar,
       content:
         "Just moved to Morningside Heights for a Columbia PhD. Rent is brutal — any tips on actually-affordable sublets that don't require a broker fee?",
+      images: [],
       created_at: new Date(Date.now() - 3600_000 * 4).toISOString(),
       reply_count: 0,
       like_count: 12,
@@ -48,6 +49,7 @@ function seed(): DB {
       author_avatar: 'https://api.dicebear.com/9.x/thumbs/svg?seed=Mei',
       content:
         "Selling my IKEA Malm desk + chair — graduating and moving home. What's a fair price when the thrift market is saturated with May move-outs?",
+      images: [],
       created_at: new Date(Date.now() - 3600_000 * 2).toISOString(),
       reply_count: 0,
       like_count: 3,
@@ -58,6 +60,7 @@ function seed(): DB {
       author_name: 'Jordan',
       author_avatar: 'https://api.dicebear.com/9.x/thumbs/svg?seed=Jordan',
       content: 'Feeling wrecked from thesis defense. Didn\'t sleep. Just need to vent for a second.',
+      images: [],
       created_at: new Date(Date.now() - 60_000 * 40).toISOString(),
       reply_count: 0,
       like_count: 8,
@@ -147,6 +150,7 @@ function mapPost(row: any): Post {
     author_name: row.author_name ?? 'Anonymous',
     author_avatar: row.author_avatar ?? null,
     content: row.content,
+    images: Array.isArray(row.images) ? row.images : [],
     created_at: row.created_at,
     reply_count: row.reply_count ?? 0,
     like_count: row.like_count ?? 0,
@@ -229,12 +233,14 @@ export async function createPost(input: {
   author_name: string;
   author_avatar?: string | null;
   content: string;
+  images?: string[];
 }): Promise<Post> {
   const name = input.author_name?.trim() || 'Anonymous';
   const avatar =
     input.author_avatar ??
     `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(name)}`;
   const authorId = input.author_id ?? `guest-${randomUUID()}`;
+  const images = input.images ?? [];
   if (usingDB()) {
     const { data, error } = await supabaseAdmin()
       .from('posts')
@@ -243,6 +249,7 @@ export async function createPost(input: {
         author_name: name,
         author_avatar: avatar,
         content: input.content,
+        images,
       })
       .select('*')
       .single();
@@ -255,6 +262,7 @@ export async function createPost(input: {
     author_name: name,
     author_avatar: avatar,
     content: input.content,
+    images,
     created_at: new Date().toISOString(),
     reply_count: 0,
     like_count: 0,

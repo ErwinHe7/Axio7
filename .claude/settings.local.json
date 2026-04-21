@@ -2,7 +2,19 @@
   "permissions": {
     "allow": [
       "Bash(npx next *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(gh api *)",
+      "Bash(curl *)",
+      "WebFetch(domain:aximoas.vercel.app)",
+      "Bash(python3 -c ' *)",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\('/tmp/posts.json','utf8'\\)\\);const ps=d.posts||[];console.log\\('posts:',ps.length\\);ps.slice\\(0,5\\).forEach\\(p=>console.log\\(' ',p.id.slice\\(0,8\\),'author='+p.author_name,'replies='+p.reply_count,'likes='+p.like_count,p.content.slice\\(0,60\\)\\)\\);\")",
+      "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\(process.env.TEMP+'/posts.json','utf8'\\)\\);const ps=d.posts||[];console.log\\('posts:',ps.length\\);ps.slice\\(0,5\\).forEach\\(p=>console.log\\(' ',p.id.slice\\(0,8\\),'author='+p.author_name,'replies='+p.reply_count,'likes='+p.like_count,'|',p.content.slice\\(0,60\\)\\)\\);\")",
+      "Bash(curl -s https://aximoas.vercel.app/api/posts)",
+      "Bash(node -e \"const d=JSON.parse\\(require\\('fs'\\).readFileSync\\('C:/Users/hegua/AppData/Local/Temp/posts.json','utf8'\\)\\);const ps=d.posts||[];console.log\\('posts:',ps.length\\);ps.slice\\(0,5\\).forEach\\(p=>console.log\\(' ',p.id.slice\\(0,8\\),'author='+p.author_name,'replies='+p.reply_count,'likes='+p.like_count,'|',p.content.slice\\(0,60\\)\\)\\);\")",
+      "Bash(node *)"
     ]
   }
 }

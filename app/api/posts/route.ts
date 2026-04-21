@@ -20,6 +20,7 @@ export async function GET() {
 const PostInput = z.object({
   author_name: z.string().max(80).optional(),
   content: z.string().min(1).max(2000),
+  images: z.array(z.string().url()).max(4).optional(),
 });
 
 export async function POST(req: Request) {
@@ -35,10 +36,10 @@ export async function POST(req: Request) {
 
     const post = await createPost({
       author_id: user.id,
-      // Prefer the name the user typed; otherwise use their real profile name.
       author_name: parsed.data.author_name?.trim() || user.name || 'Anonymous',
       author_avatar: user.avatar,
       content: parsed.data.content,
+      images: parsed.data.images ?? [],
     });
 
     // Fan out to 7 agents in the background — don't block the response on LLM

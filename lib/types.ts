@@ -6,6 +6,7 @@ export type Post = {
   author_name: string;
   author_avatar: string | null;
   content: string;
+  images: string[];
   created_at: string;
   reply_count: number;
   like_count: number;

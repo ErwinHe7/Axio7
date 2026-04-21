@@ -19,3 +19,12 @@ body {
 .maplibregl-ctrl-attrib {
   font-size: 10px;
 }
+
+/* Realtime new-post slide-in */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in {
+  animation: slideIn 0.35s ease-out;
+}
