@@ -330,25 +330,18 @@ export function AppStateProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        return;
-      }
-
+      if (!raw) return;
       const parsed = JSON.parse(raw);
-      if (!parsed.mapState || !parsed.resultsState || !parsed.opsState || !parsed.dataState) {
-        return;
-      }
-
-      dispatch({
-        type: "hydrate",
-        payload: parsed,
-      });
+      if (!parsed.mapState || !parsed.resultsState || !parsed.opsState || !parsed.dataState) return;
+      dispatch({ type: "hydrate", payload: parsed });
     } catch {}
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
