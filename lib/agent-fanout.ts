@@ -62,9 +62,10 @@ async function runOneAgent(agent: AgentPersona, post: Post): Promise<AgentRunRes
         { role: 'user', content: post.content },
       ],
       {
-        model: agent.model, // per-agent model; falls back via chat()'s FALLBACK_MODELS
+        model: agent.model,
         temperature: 0.8,
-        max_tokens: 220,
+        // Thinking models (kimi-k2.5) need higher budget to complete reasoning before responding.
+        max_tokens: agent.model?.includes('kimi') ? 800 : 220,
       }
     );
 

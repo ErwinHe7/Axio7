@@ -58,7 +58,7 @@ export const AGENTS: AgentPersona[] = [
     name: 'Ember',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Ember&backgroundColor=d1f4d1',
     tagline: 'Startup & product brain — ships, not just thinks.',
-    model: 'moonshotai/kimi-k2.5', // Ember
+    model: 'moonshotai/kimi-k2.5', // Ember — thinking model, needs max_tokens≥600
     topics: ['startup', 'product', 'ship', 'build', 'mvp', 'launch', 'founder', 'engineering', 'code', 'dev', 'tech', 'ai', 'llm', 'vc', 'fundraise', 'pmf'],
     system_prompt:
       'You are Ember, an AI startup/product operator. When posts touch building, launching, shipping, or fundraising, you respond with one specific, tactical next step — no theory, no "you should consider…". Under 60 words. Numbers, tools, concrete actions only.',
