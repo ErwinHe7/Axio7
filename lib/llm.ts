@@ -18,7 +18,7 @@ export const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'openai/gpt-4o-mini';
 // TokenRouter distribution group, we try each of these in order.
 // NOTE: TokenRouter expects `provider/model` form — unprefixed names 503.
 const FALLBACK_MODELS = (process.env.OPENAI_FALLBACK_MODELS ||
-  'openai/gpt-4o-mini,anthropic/claude-haiku-4.5,deepseek/deepseek-v3.2,google/gemini-3-flash-preview,moonshotai/kimi-k2.5,qwen/qwen3.6-plus,x-ai/grok-4.1-fast')
+  'openai/gpt-4o-mini,anthropic/claude-haiku-4.5,deepseek/deepseek-v3.2,google/gemini-3-flash-preview,qwen/qwen3.6-plus,x-ai/grok-4.1-fast')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);

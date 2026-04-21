@@ -64,8 +64,7 @@ async function runOneAgent(agent: AgentPersona, post: Post): Promise<AgentRunRes
       {
         model: agent.model,
         temperature: 0.8,
-        // Thinking models (kimi-k2.5) need higher budget to complete reasoning before responding.
-        max_tokens: agent.model?.includes('kimi') ? 800 : 220,
+        max_tokens: 220,
       }
     );
 
