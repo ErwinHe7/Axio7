@@ -77,11 +77,20 @@ export function PostComposer() {
         }),
       });
       if (!res.ok) throw new Error('post failed');
+      const { post } = await res.json();
       setContent('');
       setImages([]);
       router.refresh();
-      setTimeout(() => router.refresh(), 4000);
-      setTimeout(() => router.refresh(), 9000);
+      // Trigger fan-out in background — runs in its own 60s serverless function.
+      // No need to await; refresh polling will pick up replies as they land.
+      fetch('/api/fanout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: post.id }),
+      }).catch(() => {});
+      setTimeout(() => router.refresh(), 5000);
+      setTimeout(() => router.refresh(), 12000);
+      setTimeout(() => router.refresh(), 20000);
     } finally {
       setSubmitting(false);
     }

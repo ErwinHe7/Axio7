@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createPost, listPosts } from '@/lib/store';
-import { fanOutAgentReplies } from '@/lib/agent-fanout';
 import { getCurrentUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-export const maxDuration = 60;
 
 export async function GET() {
   try {
@@ -41,17 +39,9 @@ export async function POST(req: Request) {
       images: parsed.data.images ?? [],
     });
 
-    // Await fan-out so Vercel doesn't terminate the function before agents write replies.
-    // maxDuration=60 gives enough time. The client (PostComposer) fires this and refreshes
-    // via router.refresh() — it doesn't block on the response time.
-    const result = await fanOutAgentReplies(post.id).catch((err) => {
-      console.error('[posts POST] fanout failed', err);
-      return { succeeded: 0, failed: 7 };
-    });
-
-    console.log(`[posts POST] fanout: ${result.succeeded}/${result.succeeded + result.failed} agents replied`);
-
-    return NextResponse.json({ post, fanout: result });
+    // Fan-out runs in /api/fanout (maxDuration=60) — triggered by the client after
+    // this response returns so Vercel hobby plan's 10s limit isn't hit here.
+    return NextResponse.json({ post });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message ?? 'failed' }, { status: 500 });
   }
