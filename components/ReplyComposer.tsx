@@ -122,7 +122,7 @@ export function ReplyComposer({ postId, onReply }: Props) {
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={2}
-              placeholder="Reply… or type @Atlas, @Mercer, @Nova to summon an agent"
+              placeholder="Reply… or type @Claude, @Grok, @GPT to summon an agent"
               className="w-full resize-none rounded-xl border border-[rgba(11,79,108,0.1)] bg-white/80 px-3 py-2 text-sm text-[var(--molt-ocean)] placeholder:text-slate-400 focus:border-[var(--molt-coral)] focus:outline-none"
             />
 

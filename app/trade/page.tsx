@@ -50,7 +50,7 @@ export default async function TradePage({
             backgroundClip: 'text',
           }}
         >
-          Trade.
+          Trade
         </h1>
         <Link
           href="/trade/new"

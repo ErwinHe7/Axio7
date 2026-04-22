@@ -125,11 +125,9 @@ export function PostComposer() {
       onSubmit={submit}
       className="rounded-[24px] p-5 transition-all sm:p-6"
       style={{
-        background: 'var(--glass)',
-        border: `1px solid ${expanded ? 'rgba(216,71,39,0.5)' : 'var(--glass-border)'}`,
-        backdropFilter: 'blur(12px) saturate(1.5)',
-        WebkitBackdropFilter: 'blur(12px) saturate(1.5)',
-        boxShadow: expanded ? '0 0 0 3px var(--glow-shell)' : 'none',
+        background: 'var(--lt-surface)',
+        border: `1px solid ${expanded ? 'rgba(216,71,39,0.4)' : 'var(--lt-border)'}`,
+        boxShadow: expanded ? '0 0 0 3px rgba(216,71,39,0.12)' : '0 2px 8px rgba(0,0,0,0.06)',
       }}
     >
       <div className="flex items-start gap-3">
@@ -142,7 +140,7 @@ export function PostComposer() {
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name (auto-filled when signed in)"
             className="w-full border-none bg-transparent text-xs focus:outline-none"
-            style={{ color: 'rgba(247,240,232,0.4)', caretColor: 'var(--molt-shell)' }}
+            style={{ color: 'var(--lt-subtle)', caretColor: 'var(--molt-shell)' }}
           />
           <textarea
             value={content}
@@ -152,7 +150,7 @@ export function PostComposer() {
             rows={expanded ? 4 : 2}
             placeholder="Post something."
             className="mt-1 w-full resize-none border-none bg-transparent text-[16px] leading-[1.6] focus:outline-none"
-            style={{ color: 'var(--molt-sand)', caretColor: 'var(--molt-shell)' }}
+            style={{ color: 'var(--lt-text)', caretColor: 'var(--molt-shell)' }}
           />
         </div>
       </div>
@@ -180,24 +178,24 @@ export function PostComposer() {
 
       {/* Agent preview strip */}
       {expanded && (
-        <div className="mt-4 flex items-center gap-2 border-t pt-3" style={{ borderColor: 'var(--glass-border)' }}>
+        <div className="mt-4 flex items-center gap-2 border-t pt-3" style={{ borderColor: 'var(--lt-border)' }}>
           <Sparkles className="h-3.5 w-3.5" style={{ color: 'var(--molt-shell)' }} />
-          <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'rgba(247,240,232,0.35)' }}>
+          <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'var(--lt-subtle)' }}>
             will reply:
           </span>
           <div className="flex -space-x-2">
             {AGENTS.map((a) => (
               <img key={a.id} src={a.avatar} alt={a.name} title={a.name}
                 className="h-6 w-6 rounded-full transition hover:z-10 hover:scale-110"
-                style={{ boxShadow: '0 0 0 2px var(--bg-deep)' }}
+                style={{ boxShadow: '0 0 0 2px white' }}
               />
             ))}
           </div>
-          <span className="text-[11px]" style={{ color: 'rgba(247,240,232,0.3)' }}>· ~30s</span>
+          <span className="text-[11px]" style={{ color: 'var(--lt-subtle)' }}>· ~30s</span>
         </div>
       )}
 
-      <div className="mt-3 flex items-center justify-between border-t pt-3" style={{ borderColor: 'var(--glass-border)' }}>
+      <div className="mt-3 flex items-center justify-between border-t pt-3" style={{ borderColor: 'var(--lt-border)' }}>
         <div className="flex items-center gap-3">
           <input
             ref={fileInputRef}
@@ -216,14 +214,14 @@ export function PostComposer() {
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
               className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition disabled:opacity-50`}
-              style={{ color: dragOver ? 'var(--molt-sand)' : 'rgba(247,240,232,0.4)' }}
+              style={{ color: dragOver ? 'var(--lt-text)' : 'rgba(247,240,232,0.4)' }}
             >
               {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
               {uploading ? 'Uploading…' : 'Photo'}
             </button>
           )}
           {!expanded && (
-            <span className="text-xs" style={{ color: 'rgba(247,240,232,0.3)' }}>7 models reply</span>
+            <span className="text-xs" style={{ color: 'var(--lt-subtle)' }}>7 models reply</span>
           )}
         </div>
         <button

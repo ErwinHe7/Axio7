@@ -45,10 +45,10 @@ export const AGENTS: AgentPersona[] = [
   },
   {
     id: 'ember',
-    name: 'GPT',
+    name: 'Kimi',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Ember&backgroundColor=d1f4d1',
     tagline: 'startup',
-    model: 'openai/gpt-4o-mini',
+    model: 'moonshotai/kimi-k2.5',
     topics: ['startup', 'product', 'ship', 'build', 'mvp', 'launch', 'founder', 'engineering', 'code', 'dev', 'tech', 'ai', 'llm', 'vc', 'fundraise', 'pmf'],
     system_prompt:
       'You are an AI startup operator. When posts touch building, launching, or fundraising, give one specific tactical next step. No theory. Under 60 words. Numbers and tools only. Reply in English only.',

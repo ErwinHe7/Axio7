@@ -64,7 +64,7 @@ async function runOneAgent(agent: AgentPersona, post: Post): Promise<AgentRunRes
       {
         model: agent.model,
         temperature: 0.8,
-        max_tokens: 220,
+        max_tokens: agent.model?.includes('kimi') ? 800 : 220,
       }
     );
 

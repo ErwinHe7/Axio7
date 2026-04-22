@@ -39,7 +39,19 @@
       "Bash(sed -i 's|    <div className=\"space-y-4\">|    <LightPage><div className=\"space-y-4\">|' 'app/post/[id]/page.tsx')",
       "Bash(sed -i 's|    <LightPage><div className=\"space-y-20 pb-16\">|    <LightPage>\\\\n      <div className=\"space-y-20 pb-16\">|' app/about/page.tsx)",
       "Bash(sed -i 's|    </div></LightPage>|    </div>\\\\n    </LightPage>|' app/about/page.tsx)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(sed -i '6s/name: '\\\\''GPT'\\\\''/name: '\\\\''GPT'\\\\''/' '20s/name: '\\\\''Claude'\\\\''/name: '\\\\''Claude'\\\\''/' '34s/name: '\\\\''DeepSeek'\\\\''/name: '\\\\''DeepSeek'\\\\''/' '48s/name: '\\\\''GPT'\\\\''/name: '\\\\''Kimi'\\\\''/' '62s/name: '\\\\''Qwen'\\\\''/name: '\\\\''Qwen'\\\\''/' '76s/name: '\\\\''Grok'\\\\''/name: '\\\\''Grok'\\\\''/' '90s/name: '\\\\''Gemini'\\\\''/name: '\\\\''Gemini'\\\\''/' lib/agents.ts)",
+      "Bash(sed -i \"48s|name: 'GPT'|name: 'Kimi'|\" lib/agents.ts)",
+      "Bash(sed -i 's|Nova, Atlas, Lumen, Ember, Sage, Mercer, Iris — each fires independently on their own model. No groupthink.|GPT, Claude, DeepSeek, Kimi, Qwen, Grok, Gemini — each fires independently on their own model. No groupthink.|' app/about/page.tsx)",
+      "Bash(sed -i \"s|Atlas knows Morningside Heights|Claude knows Morningside Heights|\" app/about/page.tsx)",
+      "Bash(sed -i \"s|          Trade\\\\.|          Trade|\" app/trade/page.tsx)",
+      "Bash(sed -i 's|@Mercer</span> to find listings · <span.*>@Atlas</span> for NYC intel|@Grok</span> to find listings · <span className=\"font-mono text-sky-700\">@Claude</span> for NYC intel|' components/PostCard.tsx)",
+      "Bash(sed -i \"s|@Atlas, @Mercer, @Nova|@Claude, @Grok, @GPT|\" components/ReplyComposer.tsx)",
+      "Bash(sed -i 's|background: '\\\\''rgba\\(10,21,32,0\\\\.9\\)'\\\\'', borderBottom: '\\\\''1px solid var\\(--glass-border\\)'\\\\''|background: '\\\\''rgba\\(247,240,232,0.95\\)'\\\\'', borderBottom: '\\\\''1px solid var\\(--lt-border\\)'\\\\''|g; *)",
+      "Bash(sed -i \"s|border: '1px solid var\\(--glass-border\\)',|border: '1px solid var\\(--lt-border\\)',|g\" components/FeedTabs.tsx)",
+      "Bash(sed -i \"s|color: 'rgba\\(247,240,232,0\\\\.5\\)'|color: 'var\\(--lt-muted\\)'|g\" components/FeedTabs.tsx)",
+      "Bash(sed -i \"s|background: 'var\\(--glass\\)',\\\\n.*border: '1px solid var\\(--lt-border\\)'|background: 'rgba\\(0,0,0,0.04\\)', border: '1px solid var\\(--lt-border\\)'|g\" components/FeedTabs.tsx)",
+      "Bash(sed -i \"s|background: 'var\\(--glass\\)',|background: 'rgba\\(0,0,0,0.04\\)',|g\" components/FeedTabs.tsx)"
     ]
   }
 }
