@@ -52,7 +52,9 @@ const AgentState = Annotation.Root({
   agent:             Annotation<AgentPersona | null>({ default: () => null, reducer: (_, v) => v }),
   retrievedContext:  Annotation<string[]>({ default: () => [], reducer: (_, v) => v }),
   previousReplies:   Annotation<string[]>({ default: () => [], reducer: (_, v) => v }),
-  // Outputs from each node
+  // Subagent outputs (run in parallel before drafting)
+  subagentOutputs:   Annotation<Record<string, string>>({ default: () => ({}), reducer: (_, v) => v }),
+  // Draft + quality
   draft:             Annotation<string>({ default: () => '', reducer: (_, v) => v }),
   moderationFlag:    Annotation<string | null>({ default: () => null, reducer: (_, v) => v }),
   confidenceScore:   Annotation<number>({ default: () => 0, reducer: (_, v) => v }),
@@ -85,8 +87,42 @@ function pickAgentNode(state: S): Partial<S> {
   return { agent: pickAgent(state.post!.content) };
 }
 
+/**
+ * runSubagents — fires all sub_agents in parallel before the main draft.
+ * Each sub_agent is a focused LLM call that produces a short insight.
+ * These outputs are injected into the draft prompt so the parent agent
+ * can synthesise them into a richer reply.
+ */
+async function runSubagentsNode(state: S): Promise<Partial<S>> {
+  const { agent, post } = state;
+  if (!agent?.sub_agents?.length || !post) return { subagentOutputs: {} };
+
+  const results = await Promise.allSettled(
+    agent.sub_agents.map(async (sub) => {
+      const output = await chat(
+        [
+          {
+            role: 'system',
+            content: `You are ${sub.name}, a focused sub-agent inside ${agent.name}.\nYour ONLY job: ${sub.responsibility}\nBe concise — 1-2 sentences max.`,
+          },
+          { role: 'user', content: post.content },
+        ],
+        { model: agent.model, temperature: 0.7, max_tokens: 80 }
+      );
+      return { name: sub.name, output: output.trim() };
+    })
+  );
+
+  const subagentOutputs: Record<string, string> = {};
+  results.forEach((r) => {
+    if (r.status === 'fulfilled') subagentOutputs[r.value.name] = r.value.output;
+  });
+
+  return { subagentOutputs };
+}
+
 async function draftNode(state: S): Promise<Partial<S>> {
-  const { agent, post, retrievedContext, previousReplies } = state;
+  const { agent, post, retrievedContext, previousReplies, subagentOutputs } = state;
 
   const ctxBlock = retrievedContext.length
     ? `\n\nRelated context from Molthuman:\n${retrievedContext.map((c) => `- ${c}`).join('\n')}`
@@ -94,7 +130,10 @@ async function draftNode(state: S): Promise<Partial<S>> {
   const prevBlock = previousReplies.length
     ? `\n\nPrevious replies (don't repeat):\n${previousReplies.join('\n')}`
     : '';
-  const subBlock = agent!.sub_agents?.length
+  // Inject real sub_agent outputs if available, otherwise fall back to responsibility hints
+  const subBlock = Object.keys(subagentOutputs).length
+    ? `\n\nYour internal sub-agents have already processed this post:\n${Object.entries(subagentOutputs).map(([name, out]) => `- ${name}: "${out}"`).join('\n')}\n\nSynthesise these insights into your reply.`
+    : agent!.sub_agents?.length
     ? `\n\nInternal sub-agents to satisfy:\n${agent!.sub_agents.map((s) => `- ${s.name}: ${s.responsibility}`).join('\n')}`
     : '';
 
@@ -211,7 +250,8 @@ const workflow = new StateGraph(AgentState)
   .addNode('loadContext',      loadContext)
   .addNode('retrieveContext',  retrieveContext)
   .addNode('pickAgent',        pickAgentNode)
-  .addNode('draftReply',         draftNode)
+  .addNode('runSubagents',     runSubagentsNode)  // ← NEW: parallel sub_agent calls
+  .addNode('draftReply',       draftNode)
   .addNode('moderate',         moderateNode)
   .addNode('critique',         critiqueNode)
   .addNode('incrementRetry',   incrementRetry)
@@ -221,8 +261,9 @@ const workflow = new StateGraph(AgentState)
   .addEdge('__start__',       'loadContext')
   .addEdge('loadContext',     'retrieveContext')
   .addEdge('retrieveContext', 'pickAgent')
-  .addEdge('pickAgent',       'draftReply')
-  .addEdge('draftReply',       'moderate')
+  .addEdge('pickAgent',       'runSubagents')    // ← run sub_agents before drafting
+  .addEdge('runSubagents',    'draftReply')       // ← draft uses sub_agent outputs
+  .addEdge('draftReply',      'moderate')
   .addEdge('moderate',        'critique')
 
   // ← THE KEY LANGGRAPH FEATURE: conditional retry edge
