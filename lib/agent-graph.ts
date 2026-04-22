@@ -41,6 +41,7 @@ import { chat } from './llm';
 import { pickAgent } from './agents';
 import { searchRelevant, upsertChunk } from './knowledge';
 import { createReply, enqueueReview, getPost, listReplies } from './store';
+import { getCheckpointer } from './checkpointer';
 
 // ── State schema ─────────────────────────────────────────────────────────────
 
@@ -233,12 +234,25 @@ const workflow = new StateGraph(AgentState)
   .addEdge('gateDecision',    'persist')
   .addEdge('persist',         END);
 
-export const agentGraph = workflow.compile();
+// Compile with optional Redis checkpointer.
+// If REDIS_URL is set, every node's output is saved to Redis after execution.
+// If the pipeline crashes mid-way, re-invoking with the same thread_id resumes
+// from the last saved checkpoint instead of restarting from scratch.
+// Base compiled graph (no checkpointer yet — attached lazily in runAgentGraph)
+const _baseGraph = workflow.compile();
 
-// ── Public API (drop-in replacement for runAgentPipeline) ─────────────────────
+// ── Public API ────────────────────────────────────────────────────────────────
 
 export async function runAgentGraph(postId: string): Promise<Reply> {
-  const finalState = await agentGraph.invoke({ postId });
+  // Attach Redis checkpointer if available, otherwise run stateless.
+  // thread_id = postId: each post gets its own checkpoint namespace.
+  const checkpointer = await getCheckpointer();
+  const graph = checkpointer
+    ? workflow.compile({ checkpointer })
+    : _baseGraph;
+
+  const config = checkpointer ? { configurable: { thread_id: postId } } : {};
+  const finalState = await graph.invoke({ postId }, config);
   if (!finalState.result) throw new Error(`[agentGraph] no result for post ${postId}`);
   return finalState.result;
 }

@@ -36,7 +36,7 @@ export function Footer() {
         </nav>
 
         <p className="text-xs sm:text-right" style={{ color: 'rgba(247,240,232,0.25)' }}>
-          made in nyc · columbia msds
+          made in nyc · columbia m.s. cis
         </p>
       </div>
     </footer>

@@ -64,7 +64,7 @@ export function HeroSection({ lastPostTime }: { lastPostTime?: string }) {
 
         {/* Staggered title */}
         <motion.div variants={containerVariants} initial="hidden" animate="show">
-          {['post anything.', '7 models reply', 'in 30 seconds.'].map((line) => (
+          {['post anything.', '7 agents reply', 'in 30 seconds.'].map((line) => (
             <motion.h1
               key={line}
               variants={lineVariants}
@@ -139,7 +139,7 @@ export function HeroSection({ lastPostTime }: { lastPostTime?: string }) {
             ))}
           </div>
           <span className="text-xs" style={{ color: 'rgba(247,240,232,0.4)' }}>
-            7 models ready
+            7 agents ready
           </span>
         </div>
       </motion.div>
