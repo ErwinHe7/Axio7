@@ -29,58 +29,46 @@ export function HeroSection({ lastPostTime, user }: { lastPostTime?: string; use
       className="relative -mx-4 flex min-h-[calc(100vh-64px)] flex-col items-start justify-center overflow-hidden px-8 py-16 sm:px-12"
       style={{ background: 'var(--bg-deep)' }}
     >
-      {/* ── Right-side visual: lobster illustration + logo watermark ── */}
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex w-1/2 items-center justify-center overflow-hidden">
-
-        {/* AXIO7 logo — faint watermark behind lobster */}
+      {/* ── Right-side: AXIO7 logo — large, clear, prominent ── */}
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex w-[45%] items-center justify-center overflow-hidden">
         <motion.img
           src="/logo.png"
-          alt=""
+          alt="AXIO7"
           aria-hidden
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.10 }}
-          transition={{ duration: 1.4, ease: 'easeOut' }}
-          className="absolute w-[380px] max-w-none select-none sm:w-[460px] lg:w-[540px]"
-        />
-
-        {/* Lobster image — transparent PNG, gentle float */}
-        <motion.img
-          src="/lobster.png"
-          alt=""
-          aria-hidden
-          style={{
-            y: yLobster,
-            filter: 'drop-shadow(0 16px 48px rgba(216,71,39,0.55)) drop-shadow(0 4px 16px rgba(11,79,108,0.3))',
-          }}
-          initial={{ opacity: 0, scale: 0.88 }}
-          animate={prefersReduced
-            ? { opacity: 1, scale: 1 }
-            : { opacity: 1, scale: 1, y: [0, -22, 0], rotate: [-1.5, 1.5, -1.5] }
-          }
-          transition={prefersReduced
-            ? { duration: 0.9, delay: 0.2 }
-            : {
-                opacity: { duration: 0.9, delay: 0.2 },
-                scale:   { duration: 0.9, delay: 0.2 },
-                y:       { duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 },
-                rotate:  { duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 },
-              }
-          }
-          className="select-none w-[320px] sm:w-[380px] lg:w-[440px]"
+          style={{ y: yLobster }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 0.22, scale: 1 }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
+          className="select-none w-[360px] max-w-none sm:w-[440px] lg:w-[520px]"
         />
       </div>
 
       {/* ── Left-side text content ── */}
       <motion.div className="relative z-10 max-w-xl" style={{ y: yParallax }}>
 
-        {/* AXIO7 logo embedded above headline */}
+        {/* Lobster — above the headline, floating animation */}
         <motion.img
-          src="/logo.png"
-          alt="AXIO7"
-          initial={{ opacity: 0, y: prefersReduced ? 0 : -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-          className="mb-6 h-20 w-auto sm:h-24 lg:h-28"
+          src="/lobster.png"
+          alt=""
+          aria-hidden
+          style={{
+            filter: 'drop-shadow(0 12px 36px rgba(216,71,39,0.6)) drop-shadow(0 4px 12px rgba(11,79,108,0.35))',
+          }}
+          initial={{ opacity: 0, scale: 0.85, y: prefersReduced ? 0 : 20 }}
+          animate={prefersReduced
+            ? { opacity: 1, scale: 1, y: 0 }
+            : { opacity: 1, scale: 1, y: [0, -18, 0], rotate: [-1.5, 1.5, -1.5] }
+          }
+          transition={prefersReduced
+            ? { duration: 0.8 }
+            : {
+                opacity: { duration: 0.8 },
+                scale:   { duration: 0.8 },
+                y:       { duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 0.8 },
+                rotate:  { duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.8 },
+              }
+          }
+          className="select-none mb-4 h-32 w-auto sm:h-40 lg:h-48"
         />
 
         <p className="mb-5 text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--molt-coral)' }}>
