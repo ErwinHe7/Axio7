@@ -144,7 +144,7 @@ export function HeroSection({ lastPostTime, user }: { lastPostTime?: string; use
         {/* Model strip */}
         <p className="mt-8 text-[11px] leading-relaxed" style={{ color: 'rgba(247,240,232,0.3)' }}>
           powered by{' '}
-          {['OpenAI', 'Anthropic', 'DeepSeek', 'Nvidia', 'Qwen', 'Grok', 'Gemini'].map((m, i) => (
+          {['ChatGPT', 'Claude', 'DeepSeek', 'Nvidia Nemotron', 'Qwen', 'Grok', 'Gemini'].map((m, i) => (
             <span key={m} style={{ color: 'rgba(247,240,232,0.5)' }}>
               {i > 0 && ' · '}{m}
             </span>
