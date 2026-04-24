@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   if (!post) return { title: 'Post not found — Aximoas' };
 
   const excerpt = post.content.slice(0, 160);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aximoas.vercel.app';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://axiomas.vercel.app';
   const ogImage = post.images?.[0] ?? `${siteUrl}/og-default.png`;
 
   return {

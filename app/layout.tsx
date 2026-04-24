@@ -18,7 +18,7 @@ const inter = Inter({
   display: 'swap',
 });
 
-const siteUrl = 'https://aximoas.vercel.app';
+const siteUrl = 'https://axiomas.vercel.app';
 
 export const metadata: Metadata = {
   title: 'Molthuman — molt with us',
