@@ -43,20 +43,19 @@ export function HeroSection({ lastPostTime, user }: { lastPostTime?: string; use
           className="absolute w-[380px] max-w-none select-none sm:w-[460px] lg:w-[540px]"
         />
 
-        {/* Lobster image — red bg removed via mix-blend-mode, gentle float */}
+        {/* Lobster image — transparent PNG, gentle float */}
         <motion.img
           src="/lobster.png"
           alt=""
           aria-hidden
           style={{
             y: yLobster,
-            mixBlendMode: 'multiply',
-            filter: 'drop-shadow(0 8px 32px rgba(216,71,39,0.6))',
+            filter: 'drop-shadow(0 16px 48px rgba(216,71,39,0.55)) drop-shadow(0 4px 16px rgba(11,79,108,0.3))',
           }}
           initial={{ opacity: 0, scale: 0.88 }}
           animate={prefersReduced
             ? { opacity: 1, scale: 1 }
-            : { opacity: 1, scale: 1, y: [0, -20, 0] }
+            : { opacity: 1, scale: 1, y: [0, -22, 0], rotate: [-1.5, 1.5, -1.5] }
           }
           transition={prefersReduced
             ? { duration: 0.9, delay: 0.2 }
@@ -64,9 +63,10 @@ export function HeroSection({ lastPostTime, user }: { lastPostTime?: string; use
                 opacity: { duration: 0.9, delay: 0.2 },
                 scale:   { duration: 0.9, delay: 0.2 },
                 y:       { duration: 5, repeat: Infinity, ease: 'easeInOut', delay: 1 },
+                rotate:  { duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 },
               }
           }
-          className="select-none w-[280px] sm:w-[320px] lg:w-[380px]"
+          className="select-none w-[320px] sm:w-[380px] lg:w-[440px]"
         />
       </div>
 
