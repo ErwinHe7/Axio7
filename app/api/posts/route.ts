@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createPost, listPosts } from '@/lib/store';
+import { createPost, listPosts, getDisplayName } from '@/lib/store';
 import { getCurrentUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
@@ -31,9 +31,11 @@ export async function POST(req: Request) {
   try {
     const user = await getCurrentUser();
 
+    // Prefer custom display name if set, then client-provided name, then auth name
+    const customName = user.authenticated ? await getDisplayName(user.id) : null;
     const post = await createPost({
       author_id: user.id,
-      author_name: parsed.data.author_name?.trim() || user.name || 'Anonymous',
+      author_name: customName || parsed.data.author_name?.trim() || user.name || 'Anonymous',
       author_avatar: user.avatar,
       content: parsed.data.content,
       images: parsed.data.images ?? [],

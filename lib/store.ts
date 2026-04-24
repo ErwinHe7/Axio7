@@ -873,3 +873,22 @@ export async function createMessage(input: {
   mem().messages.push(m);
   return m;
 }
+
+// ===== User Profiles (custom display names) =====
+
+export async function getDisplayName(userId: string): Promise<string | null> {
+  if (!usingDB()) return null;
+  const { data } = await supabaseAdmin()
+    .from('user_profiles')
+    .select('display_name')
+    .eq('user_id', userId)
+    .single();
+  return data?.display_name ?? null;
+}
+
+export async function setDisplayName(userId: string, displayName: string): Promise<void> {
+  if (!usingDB()) return;
+  await supabaseAdmin()
+    .from('user_profiles')
+    .upsert({ user_id: userId, display_name: displayName, updated_at: new Date().toISOString() });
+}

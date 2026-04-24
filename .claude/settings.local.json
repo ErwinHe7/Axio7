@@ -84,7 +84,10 @@
       "Bash(cp \".claude/worktrees/agent-a8398e85/components/PostComposer.tsx\" \"components/PostComposer.tsx\")",
       "Bash(cp \".claude/worktrees/agent-a8398e85/lib/agent-fanout.ts\" \"lib/agent-fanout.ts\")",
       "Bash(cp \".claude/worktrees/agent-a8398e85/lib/agents.ts\" \"lib/agents.ts\")",
-      "Bash(cp \".claude/worktrees/agent-a4141620/.env.example\" \".env.example\")"
+      "Bash(cp \".claude/worktrees/agent-a4141620/.env.example\" \".env.example\")",
+      "Bash(gh pr *)",
+      "Bash(git remote *)",
+      "WebFetch(domain:moltbook.com)"
     ]
   }
 }

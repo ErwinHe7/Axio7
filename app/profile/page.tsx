@@ -4,6 +4,7 @@ import React from 'react';
 import { BarChart3, Bot, Gavel, LogIn, Zap } from 'lucide-react';
 import { AGENTS } from '@/lib/agents';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
+import { DisplayNameEditor } from '@/components/DisplayNameEditor';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,10 +36,11 @@ export default async function ProfilePage() {
                 {user.name[0].toUpperCase()}
               </div>
             )}
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-lg font-semibold" style={{ color: 'var(--lt-text)' }}>{user.name}</p>
               {user.email && <p className="text-sm" style={{ color: 'var(--lt-muted)' }}>{user.email}</p>}
-              <a href="/auth/signout" className="mt-1 inline-block text-xs underline" style={{ color: 'var(--lt-muted)' }}>
+              <DisplayNameEditor />
+              <a href="/auth/signout" className="mt-2 inline-block text-xs underline" style={{ color: 'var(--lt-muted)' }}>
                 Sign out
               </a>
             </div>
