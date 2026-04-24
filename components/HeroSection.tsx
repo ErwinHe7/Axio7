@@ -187,94 +187,87 @@ export function HeroSection({ lastPostTime, user }: { lastPostTime?: string; use
 }
 
 function LobsterIllustration() {
+  // Luxury line-art style — thin strokes, no fills, high-end editorial look
+  const s = '#D84727'; // primary stroke color
+  const sl = '#F9B5A4'; // light accent
+  const sw = 1.4; // base stroke width
   return (
-    <svg width="320" height="320" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <defs>
-        <radialGradient id="shell1" cx="35%" cy="28%" r="65%">
-          <stop offset="0%" stopColor="#FF7455"/>
-          <stop offset="60%" stopColor="#D84727"/>
-          <stop offset="100%" stopColor="#9A2810"/>
-        </radialGradient>
-        <radialGradient id="shell2" cx="35%" cy="28%" r="65%">
-          <stop offset="0%" stopColor="#E86040"/>
-          <stop offset="100%" stopColor="#B83A1F"/>
-        </radialGradient>
-        <radialGradient id="claw" cx="40%" cy="30%" r="65%">
-          <stop offset="0%" stopColor="#E05030"/>
-          <stop offset="100%" stopColor="#7A2010"/>
-        </radialGradient>
-        <linearGradient id="belly" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#C84020"/>
-          <stop offset="100%" stopColor="#8B2408"/>
-        </linearGradient>
-      </defs>
+    <svg width="300" height="340" viewBox="0 0 150 170" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
 
-      {/* Long antennae — swept back elegantly */}
-      <path d="M82 42 Q55 18 20 8" stroke="#F9B5A4" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.9"/>
-      <path d="M118 42 Q145 18 180 8" stroke="#F9B5A4" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.9"/>
-      <path d="M84 46 Q62 30 44 24" stroke="#FECABA" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity="0.7"/>
-      <path d="M116 46 Q138 30 156 24" stroke="#FECABA" strokeWidth="1.4" strokeLinecap="round" fill="none" opacity="0.7"/>
+      {/* ── Antennae — long sweeping curves ── */}
+      <path d="M62 36 Q42 18 8 6"   stroke={sl} strokeWidth="1.1" strokeLinecap="round"/>
+      <path d="M88 36 Q108 18 142 6" stroke={sl} strokeWidth="1.1" strokeLinecap="round"/>
+      <path d="M64 39 Q50 26 34 20"  stroke={sl} strokeWidth="0.8" strokeLinecap="round" opacity="0.6"/>
+      <path d="M86 39 Q100 26 116 20" stroke={sl} strokeWidth="0.8" strokeLinecap="round" opacity="0.6"/>
 
-      {/* Cephalothorax — clean elongated shield shape */}
-      <path d="M72 38 Q62 34 64 26 Q72 16 100 16 Q128 16 136 26 Q138 34 128 38 Q116 44 100 45 Q84 44 72 38Z" fill="url(#shell1)"/>
-      {/* Rostrum spike */}
-      <path d="M95 16 L100 6 L105 16Z" fill="#C84020"/>
-      {/* Eye stalks + eyes */}
-      <line x1="80" y1="28" x2="74" y2="20" stroke="#8B2A12" strokeWidth="2" strokeLinecap="round"/>
-      <circle cx="73" cy="19" r="4.5" fill="#F7F0E8"/>
-      <circle cx="73.5" cy="19.5" r="2.5" fill="#0B4F6C"/>
-      <line x1="120" y1="28" x2="126" y2="20" stroke="#8B2A12" strokeWidth="2" strokeLinecap="round"/>
-      <circle cx="127" cy="19" r="4.5" fill="#F7F0E8"/>
-      <circle cx="126.5" cy="19.5" r="2.5" fill="#0B4F6C"/>
-      {/* Specular highlight on carapace */}
-      <ellipse cx="90" cy="30" rx="8" ry="6" fill="white" opacity="0.12" transform="rotate(-20 90 30)"/>
+      {/* ── Rostrum ── */}
+      <path d="M72 28 L75 18 L78 28" stroke={s} strokeWidth={sw} strokeLinejoin="round" fill="none"/>
 
-      {/* Thorax — segmented body */}
-      <rect x="72" y="44" width="56" height="46" rx="10" fill="url(#shell2)"/>
-      <path d="M72 56 Q100 60 128 56" stroke="rgba(0,0,0,0.12)" strokeWidth="1.2" fill="none"/>
-      <path d="M72 68 Q100 72 128 68" stroke="rgba(0,0,0,0.12)" strokeWidth="1.2" fill="none"/>
-      <path d="M72 80 Q100 84 128 80" stroke="rgba(0,0,0,0.12)" strokeWidth="1.2" fill="none"/>
-      <ellipse cx="88" cy="56" rx="7" ry="12" fill="white" opacity="0.08" transform="rotate(-10 88 56)"/>
+      {/* ── Carapace / cephalothorax outline ── */}
+      <path d="M55 36 Q48 30 50 22 Q58 14 75 13 Q92 14 100 22 Q102 30 95 36 Q86 42 75 43 Q64 42 55 36Z"
+        stroke={s} strokeWidth={sw} fill="none" strokeLinejoin="round"/>
 
-      {/* LEFT CLAW — large prominent cheliped */}
-      <path d="M72 52 L46 56 L36 62" stroke="#C84020" strokeWidth="6" strokeLinecap="round" fill="none"/>
-      {/* Claw body */}
-      <path d="M18 54 C8 48 4 64 12 70 C18 74 28 72 32 64 C36 56 28 46 18 54Z" fill="url(#claw)"/>
-      {/* Claw finger (dactyl) */}
-      <path d="M28 62 C22 54 14 54 12 58" stroke="#8B2A12" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
-      <ellipse cx="18" cy="62" rx="5" ry="7" fill="white" opacity="0.09" transform="rotate(-15 18 62)"/>
+      {/* ── Eyes on stalks ── */}
+      <line x1="63" y1="25" x2="58" y2="19" stroke={s} strokeWidth="1" strokeLinecap="round"/>
+      <circle cx="57" cy="18" r="2.2" stroke={s} strokeWidth="1" fill="none"/>
+      <circle cx="57.3" cy="18.3" r="0.9" fill={s}/>
+      <line x1="87" y1="25" x2="92" y2="19" stroke={s} strokeWidth="1" strokeLinecap="round"/>
+      <circle cx="93" cy="18" r="2.2" stroke={s} strokeWidth="1" fill="none"/>
+      <circle cx="92.7" cy="18.3" r="0.9" fill={s}/>
 
-      {/* RIGHT CLAW */}
-      <path d="M128 52 L154 56 L164 62" stroke="#C84020" strokeWidth="6" strokeLinecap="round" fill="none"/>
-      <path d="M182 54 C192 48 196 64 188 70 C182 74 172 72 168 64 C164 56 172 46 182 54Z" fill="url(#claw)"/>
-      <path d="M172 62 C178 54 186 54 188 58" stroke="#8B2A12" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
-      <ellipse cx="182" cy="62" rx="5" ry="7" fill="white" opacity="0.09" transform="rotate(15 182 62)"/>
+      {/* ── Thorax body ── */}
+      <rect x="56" y="42" width="38" height="30" rx="6" stroke={s} strokeWidth={sw} fill="none"/>
+      {/* Segment lines */}
+      <path d="M57 50 Q75 53 93 50" stroke={s} strokeWidth="0.7" fill="none" opacity="0.6"/>
+      <path d="M57 58 Q75 61 93 58" stroke={s} strokeWidth="0.7" fill="none" opacity="0.6"/>
+      <path d="M57 66 Q75 69 93 66" stroke={s} strokeWidth="0.7" fill="none" opacity="0.6"/>
 
-      {/* Walking legs — 3 pairs, clean lines */}
-      <line x1="76" y1="74" x2="54" y2="92" stroke="#B83A1F" strokeWidth="2.5" strokeLinecap="round"/>
-      <line x1="78" y1="82" x2="56" y2="102" stroke="#B83A1F" strokeWidth="2.5" strokeLinecap="round"/>
-      <line x1="80" y1="88" x2="62" y2="110" stroke="#B83A1F" strokeWidth="2" strokeLinecap="round"/>
-      <line x1="124" y1="74" x2="146" y2="92" stroke="#B83A1F" strokeWidth="2.5" strokeLinecap="round"/>
-      <line x1="122" y1="82" x2="144" y2="102" stroke="#B83A1F" strokeWidth="2.5" strokeLinecap="round"/>
-      <line x1="120" y1="88" x2="138" y2="110" stroke="#B83A1F" strokeWidth="2" strokeLinecap="round"/>
+      {/* ── LEFT CHELIPED (large claw) ── */}
+      {/* Arm */}
+      <path d="M56 50 L36 54 L28 60" stroke={s} strokeWidth={sw + 0.4} strokeLinecap="round" fill="none"/>
+      {/* Claw outline */}
+      <path d="M8 52 C2 46 0 58 4 64 C8 68 18 67 22 60 C26 53 18 44 8 52Z"
+        stroke={s} strokeWidth={sw} fill="none" strokeLinejoin="round"/>
+      {/* Dactyl finger */}
+      <path d="M18 59 C14 52 8 52 6 56" stroke={s} strokeWidth="1.1" strokeLinecap="round" fill="none"/>
 
-      {/* Abdomen — curved segments */}
-      <path d="M74 90 Q72 100 74 110 Q80 126 100 130 Q120 126 126 110 Q128 100 126 90 Q116 96 100 97 Q84 96 74 90Z" fill="url(#shell2)"/>
-      <path d="M75 100 Q100 106 125 100" stroke="rgba(0,0,0,0.15)" strokeWidth="1.3" fill="none"/>
-      <path d="M76 112 Q100 117 124 112" stroke="rgba(0,0,0,0.15)" strokeWidth="1.3" fill="none"/>
-      <path d="M78 122 Q100 126 122 122" stroke="rgba(0,0,0,0.15)" strokeWidth="1.3" fill="none"/>
+      {/* ── RIGHT CHELIPED ── */}
+      <path d="M94 50 L114 54 L122 60" stroke={s} strokeWidth={sw + 0.4} strokeLinecap="round" fill="none"/>
+      <path d="M142 52 C148 46 150 58 146 64 C142 68 132 67 128 60 C124 53 132 44 142 52Z"
+        stroke={s} strokeWidth={sw} fill="none" strokeLinejoin="round"/>
+      <path d="M132 59 C136 52 142 52 144 56" stroke={s} strokeWidth="1.1" strokeLinecap="round" fill="none"/>
 
-      {/* Fan tail — 5 plates, fanned elegantly */}
-      {/* Central telson */}
-      <path d="M92 128 Q88 142 86 158 Q90 164 100 165 Q110 164 114 158 Q112 142 108 128Z" fill="#C84020"/>
-      {/* Left uropod 1 */}
-      <path d="M88 128 Q78 138 70 154 Q74 160 82 158 Q90 148 90 130Z" fill="#B83A1F"/>
-      {/* Left uropod 2 */}
-      <path d="M84 126 Q68 132 58 146 Q62 153 70 150 Q80 140 84 126Z" fill="#9A2810"/>
-      {/* Right uropod 1 */}
-      <path d="M112 128 Q122 138 130 154 Q126 160 118 158 Q110 148 110 130Z" fill="#B83A1F"/>
-      {/* Right uropod 2 */}
-      <path d="M116 126 Q132 132 142 146 Q138 153 130 150 Q120 140 116 126Z" fill="#9A2810"/>
+      {/* ── Walking legs — 3 pairs each side ── */}
+      <line x1="60" y1="62" x2="44" y2="78" stroke={s} strokeWidth="1" strokeLinecap="round"/>
+      <line x1="62" y1="68" x2="46" y2="86" stroke={s} strokeWidth="1" strokeLinecap="round"/>
+      <line x1="64" y1="72" x2="50" y2="92" stroke={s} strokeWidth="0.9" strokeLinecap="round"/>
+      <line x1="90" y1="62" x2="106" y2="78" stroke={s} strokeWidth="1" strokeLinecap="round"/>
+      <line x1="88" y1="68" x2="104" y2="86" stroke={s} strokeWidth="1" strokeLinecap="round"/>
+      <line x1="86" y1="72" x2="100" y2="92" stroke={s} strokeWidth="0.9" strokeLinecap="round"/>
+
+      {/* ── Abdomen — tapered segments ── */}
+      <path d="M57 72 Q55 82 57 92 Q62 108 75 112 Q88 108 93 92 Q95 82 93 72 Q84 77 75 78 Q66 77 57 72Z"
+        stroke={s} strokeWidth={sw} fill="none" strokeLinejoin="round"/>
+      <path d="M58 82 Q75 87 92 82"  stroke={s} strokeWidth="0.7" fill="none" opacity="0.6"/>
+      <path d="M59 92 Q75 97 91 92"  stroke={s} strokeWidth="0.7" fill="none" opacity="0.6"/>
+      <path d="M61 101 Q75 105 89 101" stroke={s} strokeWidth="0.7" fill="none" opacity="0.6"/>
+
+      {/* ── Fan tail — elegant 5-plate spread ── */}
+      {/* central */}
+      <path d="M70 110 Q67 126 66 140 Q70 146 75 147 Q80 146 84 140 Q83 126 80 110Z"
+        stroke={s} strokeWidth={sw} fill="none" strokeLinejoin="round"/>
+      {/* left 1 */}
+      <path d="M67 110 Q59 120 54 136 Q58 142 64 140 Q70 130 70 112Z"
+        stroke={s} strokeWidth={sw} fill="none" strokeLinejoin="round"/>
+      {/* left 2 */}
+      <path d="M64 108 Q50 116 44 130 Q48 137 55 134 Q62 124 64 108Z"
+        stroke={s} strokeWidth="1.1" fill="none" strokeLinejoin="round" opacity="0.75"/>
+      {/* right 1 */}
+      <path d="M83 110 Q91 120 96 136 Q92 142 86 140 Q80 130 80 112Z"
+        stroke={s} strokeWidth={sw} fill="none" strokeLinejoin="round"/>
+      {/* right 2 */}
+      <path d="M86 108 Q100 116 106 130 Q102 137 95 134 Q88 124 86 108Z"
+        stroke={s} strokeWidth="1.1" fill="none" strokeLinejoin="round" opacity="0.75"/>
     </svg>
   );
 }
