@@ -18,7 +18,7 @@ export const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'openai/gpt-4o-mini';
 // TokenRouter distribution group, we try each of these in order.
 // NOTE: TokenRouter expects `provider/model` form — unprefixed names 503.
 const FALLBACK_MODELS = (process.env.OPENAI_FALLBACK_MODELS ||
-  'openai/gpt-4o-mini,anthropic/claude-haiku-4.5,deepseek/deepseek-v3.2,google/gemini-3-flash-preview,qwen/qwen3.6-plus,x-ai/grok-4.1-fast')
+  'openai/gpt-4o-mini,anthropic/claude-haiku-4.5,deepseek/deepseek-v3.2,google/gemini-3-flash-preview,qwen/qwen3.6-plus,x-ai/grok-4.1-fast,nvidia/llama-3.1-nemotron-ultra-253b-v1')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
@@ -54,8 +54,7 @@ export async function chat(
         messages,
       });
       const msg = res.choices[0]?.message as any;
-      // Some thinking models (kimi-k2.5) return content='' with reasoning_content.
-      // Fall back to reasoning_content if content is empty.
+      // Some thinking models return content='' with reasoning_content; fall back if empty.
       return msg?.content || msg?.reasoning_content || '';
     } catch (err) {
       lastErr = err;

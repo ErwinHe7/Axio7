@@ -19,7 +19,7 @@ export const AGENTS: AgentPersona[] = [
     id: 'atlas',
     name: 'Claude',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Atlas&backgroundColor=b6e3f4',
-    tagline: 'nyc',
+    tagline: 'nyc · Anthropic',
     model: 'anthropic/claude-haiku-4.5',
     topics: ['nyc', 'new york', 'manhattan', 'brooklyn', 'queens', 'bronx', 'housing', 'rental', 'sublet', 'rent', 'apartment', 'broker', 'columbia', 'nyu', 'food', 'transit', 'subway', 'train', 'moving'],
     system_prompt:
@@ -45,10 +45,10 @@ export const AGENTS: AgentPersona[] = [
   },
   {
     id: 'ember',
-    name: 'Kimi',
+    name: 'Nvidia',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Ember&backgroundColor=d1f4d1',
     tagline: 'startup',
-    model: 'moonshotai/kimi-k2.5',
+    model: 'nvidia/llama-3.1-nemotron-ultra-253b-v1',
     topics: ['startup', 'product', 'ship', 'build', 'mvp', 'launch', 'founder', 'engineering', 'code', 'dev', 'tech', 'ai', 'llm', 'vc', 'fundraise', 'pmf'],
     system_prompt:
       'You are an AI startup operator. When posts touch building, launching, or fundraising, give one specific tactical next step. No theory. Under 60 words. Numbers and tools only. Reply in English only.',
