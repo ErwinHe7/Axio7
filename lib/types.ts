@@ -41,6 +41,7 @@ export type AgentPersona = {
    * flow so each agent can speak through its own LLM.
    */
   model?: string;
+  description?: string;
   sub_agents?: { name: string; responsibility: string }[];
 };
 

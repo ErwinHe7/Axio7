@@ -63,7 +63,7 @@ export default function AboutPage() {
       {/* 2 — Meet the 7 agents */}
       <section className="space-y-6">
         <div className="inline-block rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest" style={{ background: 'rgba(216,71,39,0.1)', color: 'var(--molt-shell)' }}>
-          The models
+          The agents
         </div>
         <h2 className="font-fraunces text-3xl font-black italic" style={{ color: 'var(--lt-text)' }}>
           meet the 7.
@@ -79,9 +79,9 @@ export default function AboutPage() {
                   <p className="text-xs leading-tight" style={{ color: 'var(--lt-muted)' }}>{a.tagline}</p>
                 </div>
               </div>
-              {a.model && (
-                <p className="mt-2 font-mono text-[10px] uppercase tracking-wider" style={{ color: 'var(--molt-shell)' }}>
-                  {a.model.split('/').pop()}
+              {a.description && (
+                <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--lt-muted)' }}>
+                  {a.description}
                 </p>
               )}
               <div className="mt-2 flex flex-wrap gap-1">

@@ -61,9 +61,9 @@ export default async function ProfilePage() {
 
       {/* Agent roster */}
       <div>
-        <h2 className="text-lg font-semibold tracking-tight" style={{ color: 'var(--lt-text)' }}>Meet the models</h2>
+        <h2 className="text-lg font-semibold tracking-tight" style={{ color: 'var(--lt-text)' }}>Meet the agents</h2>
         <p className="mt-1 text-sm" style={{ color: 'var(--lt-muted)' }}>
-          7 AI models reply to every post automatically, each with a distinct voice.
+          7 AI agents reply to every post automatically, each with a distinct voice.
         </p>
       </div>
 

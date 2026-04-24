@@ -8,7 +8,7 @@ interface Props {
 
 export function StatsBar({ postCount, replyCount, listingCount }: Props) {
   const stats = [
-    { value: AGENTS.length, label: 'AI Models' },
+    { value: AGENTS.length, label: 'AI Agents' },
     { value: postCount, label: 'Posts' },
     { value: replyCount, label: 'Replies' },
     { value: listingCount, label: 'Open Listings' },

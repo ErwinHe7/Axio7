@@ -6,6 +6,7 @@ export const AGENTS: AgentPersona[] = [
     name: 'GPT',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Nova&backgroundColor=c0aede',
     tagline: 'general',
+    description: 'The generalist. Balanced takes on anything you throw at the thread.',
     model: 'openai/gpt-4o-mini',
     topics: ['idea', 'philosophy', 'tech', 'life', 'career', 'startup'],
     system_prompt:
@@ -20,6 +21,7 @@ export const AGENTS: AgentPersona[] = [
     name: 'Claude',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Atlas&backgroundColor=b6e3f4',
     tagline: 'Anthropic',
+    description: 'Your Morningside Heights local. Housing, transit, where to eat after 11pm.',
     model: 'anthropic/claude-haiku-4.5',
     topics: ['nyc', 'new york', 'manhattan', 'brooklyn', 'queens', 'bronx', 'housing', 'rental', 'sublet', 'rent', 'apartment', 'broker', 'columbia', 'nyu', 'food', 'transit', 'subway', 'train', 'moving'],
     system_prompt:
@@ -34,6 +36,7 @@ export const AGENTS: AgentPersona[] = [
     name: 'DeepSeek',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Lumen&backgroundColor=ffd5dc',
     tagline: 'philosophy',
+    description: 'Philosophy major energy. Asks why before how.',
     model: 'deepseek/deepseek-v3.2',
     topics: ['meaning', 'purpose', 'identity', 'value', 'ethic', 'philosophy', 'reflect', 'question', 'doubt', 'belief', 'relationship', 'friendship', 'love'],
     system_prompt:
@@ -48,6 +51,7 @@ export const AGENTS: AgentPersona[] = [
     name: 'Nvidia',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Ember&backgroundColor=d1f4d1',
     tagline: 'Nvidia',
+    description: 'Startup operator. Tactical next steps, no theory.',
     model: 'nvidia/nemotron-3-super-120b-a12b',
     topics: ['startup', 'product', 'ship', 'build', 'mvp', 'launch', 'founder', 'engineering', 'code', 'dev', 'tech', 'ai', 'llm', 'vc', 'fundraise', 'pmf'],
     system_prompt:
@@ -62,6 +66,7 @@ export const AGENTS: AgentPersona[] = [
     name: 'Qwen',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Sage&backgroundColor=fde68a',
     tagline: 'books',
+    description: 'The reader. Books, research, long-form references.',
     model: 'qwen/qwen3.6-plus',
     topics: ['book', 'read', 'reading', 'novel', 'essay', 'writing', 'write', 'author', 'paper', 'thesis', 'study', 'academic', 'research', 'literature', 'poem', 'poetry'],
     system_prompt:
@@ -76,6 +81,7 @@ export const AGENTS: AgentPersona[] = [
     name: 'Grok',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Mercer&backgroundColor=fecaca',
     tagline: 'deals',
+    description: 'Deal hunter. Finds the cheapest sublet, the best coupon, the arbitrage.',
     model: 'x-ai/grok-4.1-fast',
     topics: ['deal', 'price', 'trade', 'sell', 'buy', 'bid', 'bidding', 'marketplace', 'furniture', 'ikea', 'couch', 'desk', 'electronics', 'ipad', 'iphone', 'macbook', 'moving', 'graduation', 'sublease', 'resell', 'negotiate'],
     system_prompt:
@@ -90,6 +96,7 @@ export const AGENTS: AgentPersona[] = [
     name: 'Gemini',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Iris&backgroundColor=bfdbfe',
     tagline: 'culture',
+    description: 'Culture radar. Shows, openings, what\'s trending this weekend in NYC.',
     model: 'google/gemini-3-flash-preview',
     topics: ['art', 'gallery', 'museum', 'moma', 'met', 'show', 'concert', 'music', 'gig', 'film', 'movie', 'theater', 'broadway', 'off-broadway', 'exhibit', 'culture', 'nightlife', 'weekend'],
     system_prompt:
