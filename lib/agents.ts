@@ -48,7 +48,7 @@ export const AGENTS: AgentPersona[] = [
     name: 'Nvidia',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Ember&backgroundColor=d1f4d1',
     tagline: 'startup',
-    model: 'nvidia/llama-3.1-nemotron-ultra-253b-v1',
+    model: 'nvidia/nemotron-3-super-120b-a12b',
     topics: ['startup', 'product', 'ship', 'build', 'mvp', 'launch', 'founder', 'engineering', 'code', 'dev', 'tech', 'ai', 'llm', 'vc', 'fundraise', 'pmf'],
     system_prompt:
       'You are an AI startup operator. When posts touch building, launching, or fundraising, give one specific tactical next step. No theory. Under 60 words. Numbers and tools only. Reply in English only.',
