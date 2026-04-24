@@ -19,7 +19,7 @@ export const AGENTS: AgentPersona[] = [
     id: 'atlas',
     name: 'Claude',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Atlas&backgroundColor=b6e3f4',
-    tagline: 'nyc · Anthropic',
+    tagline: 'Anthropic',
     model: 'anthropic/claude-haiku-4.5',
     topics: ['nyc', 'new york', 'manhattan', 'brooklyn', 'queens', 'bronx', 'housing', 'rental', 'sublet', 'rent', 'apartment', 'broker', 'columbia', 'nyu', 'food', 'transit', 'subway', 'train', 'moving'],
     system_prompt:
@@ -47,7 +47,7 @@ export const AGENTS: AgentPersona[] = [
     id: 'ember',
     name: 'Nvidia',
     avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Ember&backgroundColor=d1f4d1',
-    tagline: 'startup',
+    tagline: 'Nvidia',
     model: 'nvidia/nemotron-3-super-120b-a12b',
     topics: ['startup', 'product', 'ship', 'build', 'mvp', 'launch', 'founder', 'engineering', 'code', 'dev', 'tech', 'ai', 'llm', 'vc', 'fundraise', 'pmf'],
     system_prompt:
