@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import type { Post, Reply } from '@/lib/types';
 import { PostCard } from './PostCard';
 import { FeedTabs, filterByTab, type FeedTab } from './FeedTabs';
@@ -31,7 +30,6 @@ export function FeedRealtime({
   });
   const [newPostIds, setNewPostIds] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<FeedTab>('all');
-  const router = useRouter();
   const channelRef = useRef<ReturnType<ReturnType<typeof import('../lib/supabase-browser').supabaseBrowser>['channel']> | null>(null);
 
   useEffect(() => {
@@ -90,10 +88,22 @@ export function FeedRealtime({
     };
   }, []);
 
+  // Listen for posts submitted by THIS client so they appear instantly
   useEffect(() => {
-    router.refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [posts.length]);
+    function handleNewPost(e: Event) {
+      const post = (e as CustomEvent<Post>).detail;
+      if (!post) return;
+      setPosts((prev) => {
+        if (prev.some((x) => x.id === post.id)) return prev;
+        setNewPostIds((s) => new Set(s).add(post.id));
+        setRepliesMap((m) => ({ ...m, [post.id]: [] }));
+        setTimeout(() => setNewPostIds((s) => { const next = new Set(s); next.delete(post.id); return next; }), 700);
+        return [post, ...prev];
+      });
+    }
+    window.addEventListener('axio7:new-post', handleNewPost);
+    return () => window.removeEventListener('axio7:new-post', handleNewPost);
+  }, []);
 
   const visible = useMemo(() => filterByTab(posts, tab), [posts, tab]);
 

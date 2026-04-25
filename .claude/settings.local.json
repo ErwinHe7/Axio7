@@ -87,7 +87,10 @@
       "Bash(cp \".claude/worktrees/agent-a4141620/.env.example\" \".env.example\")",
       "Bash(gh pr *)",
       "Bash(git remote *)",
-      "WebFetch(domain:moltbook.com)"
+      "WebFetch(domain:moltbook.com)",
+      "Bash(identify \"C:\\\\Users\\\\hegua\\\\Desktop\\\\StartupProduct\\\\AgenticWorld\\\\Aximoas\\\\public\\\\lobster.png\")",
+      "Bash(python3 *)",
+      "Bash(python *)"
     ]
   }
 }

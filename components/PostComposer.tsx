@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Loader2, Send, ImagePlus, X, Sparkles } from 'lucide-react';
 import { AGENTS, extractMentionedAgentId } from '@/lib/agents';
 import { supabaseBrowser } from '@/lib/supabase-browser';
@@ -29,7 +28,6 @@ export function PostComposer() {
   const [dragOver, setDragOver] = useState(false);
   const [focused, setFocused] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
 
   async function uploadFiles(files: File[]) {
     const remaining = 4 - images.length;
@@ -99,15 +97,13 @@ export function PostComposer() {
       const { post } = await res.json();
       setContent('');
       setImages([]);
-      router.refresh();
+      // Notify FeedRealtime directly — no router.refresh() to avoid state reset
+      window.dispatchEvent(new CustomEvent('axio7:new-post', { detail: post }));
       fetch('/api/fanout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ post_id: post.id, ...(mentionedAgentId ? { mention: mentionedAgentId } : {}) }),
       }).catch(() => {});
-      setTimeout(() => router.refresh(), 5000);
-      setTimeout(() => router.refresh(), 12000);
-      setTimeout(() => router.refresh(), 20000);
     } finally {
       setSubmitting(false);
     }
