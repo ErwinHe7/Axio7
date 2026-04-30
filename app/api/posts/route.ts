@@ -22,22 +22,52 @@ const PostInput = z.object({
   images: z.array(z.string().url()).max(4).optional(),
 });
 
-async function checkPostRateLimit(authorId: string) {
-  const recentPosts = await listPosts(50);
+async function checkPostRateLimit(authorId: string, content: string) {
+  const recentPosts = await listPosts(100);
   const now = Date.now();
-  const mine = recentPosts
-    .filter((post) => post.author_id === authorId)
+  const mine = recentPosts.filter((post) => post.author_id === authorId);
+  const myTimes = mine
     .map((post) => new Date(post.created_at).getTime())
     .filter((time) => Number.isFinite(time));
 
-  const lastPostAt = Math.max(0, ...mine);
-  if (lastPostAt && now - lastPostAt < 8_000) {
-    return 'Please wait a few seconds before posting again.';
+  // 1. Hard cooldown: 30s between posts
+  const lastPostAt = myTimes.length > 0 ? Math.max(...myTimes) : 0;
+  if (lastPostAt && now - lastPostAt < 30_000) {
+    return 'Please wait 30 seconds before posting again.';
   }
 
+  // 2. Burst limit: max 3 posts per 10 minutes
   const tenMinutesAgo = now - 10 * 60_000;
-  if (mine.filter((time) => time >= tenMinutesAgo).length >= 5) {
-    return 'Too many posts from this identity. Try again in a few minutes.';
+  if (myTimes.filter((t) => t >= tenMinutesAgo).length >= 3) {
+    return 'Too many posts. Please wait a few minutes.';
+  }
+
+  // 3. Hourly cap: max 10 posts per hour
+  const oneHourAgo = now - 60 * 60_000;
+  if (myTimes.filter((t) => t >= oneHourAgo).length >= 10) {
+    return 'Hourly post limit reached. Try again later.';
+  }
+
+  // 4. Duplicate content check: block identical or near-identical content
+  const trimmed = content.trim().toLowerCase();
+  const duplicate = mine.find((post) => {
+    const existing = post.content.trim().toLowerCase();
+    // Exact match
+    if (existing === trimmed) return true;
+    // Very short content (≤10 chars) posted more than once
+    if (trimmed.length <= 10 && existing === trimmed) return true;
+    return false;
+  });
+  if (duplicate) {
+    return 'You have already sent similar content.';
+  }
+
+  // 5. Single-character / purely whitespace spam detection
+  if (trimmed.length <= 2) {
+    const shortPosts = mine.filter((p) => p.content.trim().length <= 2);
+    if (shortPosts.length >= 2) {
+      return 'You have already sent similar content.';
+    }
   }
 
   return null;
@@ -51,7 +81,7 @@ export async function POST(req: Request) {
   }
   try {
     const user = await getCurrentUser();
-    const rateLimitError = await checkPostRateLimit(user.id);
+    const rateLimitError = await checkPostRateLimit(user.id, parsed.data.content);
     if (rateLimitError) {
       return NextResponse.json({ error: rateLimitError }, { status: 429 });
     }
