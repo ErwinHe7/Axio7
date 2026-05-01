@@ -30,6 +30,7 @@ export function PostCard({ post, replies, canDelete, canPin }: { post: Post; rep
   const [localReplies, setLocalReplies] = useState<Reply[]>([]);
   const [deleted, setDeleted] = useState(false);
   const [pinned, setPinned] = useState(post.pinned ?? false);
+  const [imageSizes, setImageSizes] = useState<Record<number, { width: number; height: number }>>({});
   const [, start] = useTransition();
 
   const prefersReduced = useReducedMotion();
@@ -72,7 +73,11 @@ export function PostCard({ post, replies, canDelete, canPin }: { post: Post; rep
 
   async function handleDelete() {
     if (!confirm('Delete this post?')) return;
-    await fetch(`/api/posts/${post.id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/posts/${post.id}`, { method: 'DELETE' }).catch(() => null);
+    if (!res?.ok) {
+      alert('Could not delete this post.');
+      return;
+    }
     setDeleted(true);
   }
 
@@ -87,7 +92,22 @@ export function PostCard({ post, replies, canDelete, canPin }: { post: Post; rep
   const isLong = text.length > POST_CLAMP_CHARS;
   const display = expanded || !isLong ? text : text.slice(0, POST_CLAMP_CHARS).trimEnd() + '…';
   const imgs = post.images ?? [];
-  const gridClass = imgs.length === 1 ? 'grid-cols-1' : imgs.length === 2 ? 'grid-cols-2' : imgs.length === 3 ? 'grid-cols-3' : 'grid-cols-2';
+  const imageItems = imgs.map((src, index) => {
+    const size = imageSizes[index];
+    const ratio = size?.height ? size.width / size.height : null;
+    return { src, index, ratio };
+  });
+  const allImageRatiosKnown = imageItems.length > 0 && imageItems.every((item) => item.ratio != null);
+  // Always preserve original order — don't reorder by ratio
+  const orderedImages = imageItems;
+  const gridClass =
+    imgs.length === 2
+      ? 'grid-cols-2'
+      : imgs.length === 3
+          ? 'grid-cols-1 sm:grid-cols-3'
+          : imgs.length >= 4
+              ? 'grid-cols-2'
+              : 'grid-cols-1';
 
   const allReplies = [...replies, ...localReplies];
   const agentReplies = allReplies.filter((r) => r.author_kind === 'agent');
@@ -150,10 +170,34 @@ export function PostCard({ post, replies, canDelete, canPin }: { post: Post; rep
             </button>
           )}
           {imgs.length > 0 && (
-            <div className={`mt-3 grid gap-1.5 ${gridClass}`}>
-              {imgs.map((src, i) => (
-                <img key={i} src={src} alt="" className="w-full rounded-xl object-contain" style={{ border: '1px solid var(--lt-border)', maxHeight: imgs.length === 1 ? '520px' : '280px', background: 'rgba(0,0,0,0.03)' }} />
-              ))}
+            <div className={`mt-3 grid gap-2 ${gridClass}`}>
+              {orderedImages.map(({ src, index, ratio }) => {
+                const isPortrait = (ratio ?? 1) <= 0.9;
+                const maxHeight = imgs.length === 1 ? '540px' : imgs.length === 2 ? '520px' : '360px';
+                return (
+                  <div
+                    key={`${src}-${index}`}
+                    className="flex justify-center overflow-hidden rounded-xl"
+                    style={{ border: '1px solid var(--lt-border)', background: 'rgba(0,0,0,0.03)' }}
+                  >
+                    <img
+                      src={src}
+                      alt=""
+                      onLoad={(event) => {
+                        const { naturalWidth, naturalHeight } = event.currentTarget;
+                        if (!naturalWidth || !naturalHeight) return;
+                        setImageSizes((prev) =>
+                          prev[index]
+                            ? prev
+                            : { ...prev, [index]: { width: naturalWidth, height: naturalHeight } }
+                        );
+                      }}
+                      className="w-full object-cover"
+                      style={{ maxHeight, aspectRatio: imgs.length === 2 ? '1/1' : undefined }}
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
