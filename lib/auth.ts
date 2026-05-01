@@ -17,11 +17,13 @@ const DEFAULT_ADMIN_EMAILS = ['gh2722@columbia.edu'];
 
 function adminEmails(): string[] {
   const fromEnv = process.env.ADMIN_EMAILS;
-  if (!fromEnv) return DEFAULT_ADMIN_EMAILS;
-  return fromEnv
-    .split(',')
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
+  const configured = fromEnv
+    ? fromEnv
+        .split(',')
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean)
+    : [];
+  return Array.from(new Set([...DEFAULT_ADMIN_EMAILS, ...configured]));
 }
 
 export function isAdmin(user: CurrentUser | null | undefined): boolean {

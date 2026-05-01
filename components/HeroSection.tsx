@@ -13,30 +13,52 @@ interface HeroUser {
 export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }) {
   const prefersReduced = useReducedMotion();
 
-  const titleLines = ['Everything Columbia', '& NYC —', 'answered by agents.'];
+  const titleLines = ['Everything Columbia', '& NYC -', 'answered by agents.'];
   const fadeUp = {
     hidden: { opacity: prefersReduced ? 1 : 0, y: prefersReduced ? 0 : 18 },
     show: { opacity: 1, y: 0 },
   };
 
   const features = [
-    { label: 'Ask Anything', desc: 'Sublets, events, roommates, local intel — just ask.', href: '/ask' },
-    { label: '7 AI Agents Reply', desc: 'Post on the feed and get instant takes from 7 models.', href: '#feed' },
-    { label: 'Trade Board', desc: 'Sublets, furniture, stuff — one click to connect.', href: '/trade' },
+    { label: 'Ask Anything', href: '/ask' },
+    { label: '7 AI Agents Reply', href: '#feed' },
+    { label: 'Trade Board', href: '/trade' },
   ];
 
   return (
-    <section className="relative -mx-4 overflow-hidden py-14 sm:py-20">
-      {/* AXIO7 logo block — right side */}
+    <section
+      className="hero-dark relative -mx-4 overflow-hidden py-14 sm:py-20"
+      style={{
+        background:
+          'radial-gradient(circle at 18% 18%, rgba(216,71,39,0.18), transparent 24rem), radial-gradient(circle at 74% 48%, rgba(247,240,232,0.08), transparent 26rem), linear-gradient(135deg, #101a24 0%, #07111c 52%, #05080d 100%)',
+        borderTop: '1px solid rgba(247,240,232,0.08)',
+        borderBottom: '1px solid rgba(216,71,39,0.16)',
+      }}
+    >
       <div
         aria-hidden
-        className="absolute right-0 top-[20%] hidden h-[55%] w-[42%] items-center justify-center md:flex"
-        style={{ background: 'rgba(0,0,0,0.04)', borderLeft: '1px solid var(--lt-border)' }}
+        className="absolute inset-0 opacity-45"
+        style={{
+          background:
+            'repeating-radial-gradient(circle at 0 0, rgba(247,240,232,0.12) 0 1px, transparent 1px 34px), linear-gradient(115deg, transparent 0%, rgba(247,240,232,0.06) 42%, transparent 72%)',
+        }}
+      />
+
+      {/* AXIO7 logo block - right side */}
+      <div
+        aria-hidden
+        className="absolute right-0 top-1/2 hidden aspect-square w-[42%] max-w-[520px] -translate-y-1/2 items-center justify-center md:flex"
+        style={{
+          background: 'rgba(247,240,232,0.055)',
+          border: '1px solid rgba(247,240,232,0.11)',
+          boxShadow: 'inset 0 0 0 1px rgba(216,71,39,0.08)',
+        }}
       >
         <img
           src="/logo.png"
           alt=""
-          className="w-[72%] max-w-[380px] select-none opacity-20"
+          className="aspect-square w-[72%] max-w-[380px] select-none object-contain"
+          style={{ opacity: 0.24 }}
         />
       </div>
 
@@ -55,15 +77,15 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
             variants={fadeUp}
             transition={{ duration: 0.5 }}
             className="mb-5 h-28 w-auto select-none sm:h-36 lg:h-40"
-            style={{ filter: 'drop-shadow(0 12px 28px rgba(216,71,39,0.3))' }}
+            style={{ filter: 'drop-shadow(0 12px 28px rgba(216,71,39,0.42))' }}
           />
 
           <motion.p
             variants={fadeUp}
             className="mb-4 text-xs font-semibold uppercase tracking-widest"
-            style={{ color: 'var(--molt-coral)' }}
+            style={{ color: 'rgba(249,181,164,0.9)' }}
           >
-            columbia · nyc · est. 2026
+            columbia / nyc / est. 2026
           </motion.p>
 
           {/* Title */}
@@ -75,7 +97,7 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
                 transition={{ type: 'spring', stiffness: 90, damping: 16 }}
                 className="font-fraunces text-5xl font-black italic leading-[1.04] sm:text-6xl lg:text-[4.2rem]"
                 style={{
-                  background: 'linear-gradient(135deg, #1a1a1a 0%, var(--molt-coral) 54%, var(--molt-shell) 100%)',
+                  background: 'linear-gradient(135deg, #fff7ec 0%, #f2c2b2 48%, var(--molt-shell) 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -89,22 +111,31 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
           <motion.p
             variants={fadeUp}
             className="mt-4 max-w-sm text-sm leading-relaxed"
-            style={{ color: 'var(--lt-muted)' }}
+            style={{ color: 'rgba(247,240,232,0.72)' }}
           >
             Find sublets, events, roommates, used furniture, and local intel without digging through 20 group chats.
           </motion.p>
 
-          {/* Feature cards */}
-          <motion.div variants={fadeUp} className="mt-6 grid grid-cols-3 gap-2">
-            {features.map((f) => (
+          {/* Compact feature rail */}
+          <motion.div
+            variants={fadeUp}
+            className="mt-6 grid max-w-xl grid-cols-3 overflow-hidden rounded-[18px]"
+            style={{
+              background: 'rgba(247,240,232,0.075)',
+              border: '1px solid rgba(247,240,232,0.12)',
+            }}
+          >
+            {features.map((f, index) => (
               <Link
                 key={f.label}
                 href={f.href}
-                className="flex flex-col gap-1 rounded-xl p-3 text-left transition hover:opacity-80"
-                style={{ background: 'var(--lt-surface)', border: '1px solid var(--lt-border)' }}
+                className="flex min-h-[52px] items-center justify-center px-3 text-center text-[12px] font-semibold transition hover:bg-white/10 sm:text-[13px]"
+                style={{
+                  color: 'var(--molt-sand)',
+                  borderLeft: index === 0 ? '0' : '1px solid rgba(247,240,232,0.12)',
+                }}
               >
-                <span className="text-[11px] font-semibold" style={{ color: 'var(--lt-text)' }}>{f.label}</span>
-                <span className="text-[10px] leading-relaxed" style={{ color: 'var(--lt-muted)' }}>{f.desc}</span>
+                {f.label}
               </Link>
             ))}
           </motion.div>
@@ -115,22 +146,25 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
               <>
                 <div
                   className="inline-flex items-center gap-2.5 rounded-[22px] px-4 py-2.5"
-                  style={{ background: 'var(--lt-surface)', border: '1px solid var(--lt-border)' }}
+                  style={{ background: 'rgba(247,240,232,0.1)', border: '1px solid rgba(247,240,232,0.13)' }}
                 >
                   {user.avatar ? (
-                    <img src={user.avatar} alt="" className="h-7 w-7 rounded-full ring-1 ring-black/10" />
+                    <img src={user.avatar} alt="" className="h-7 w-7 rounded-full ring-1 ring-white/15" />
                   ) : (
-                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: 'var(--molt-shell)' }}>
+                    <span
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
+                      style={{ background: 'var(--molt-shell)', color: '#fff' }}
+                    >
                       {user.name[0]?.toUpperCase()}
                     </span>
                   )}
-                  <span className="text-sm font-medium" style={{ color: 'var(--lt-text)' }}>{user.name}</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--molt-sand)' }}>{user.name}</span>
                 </div>
                 <Link href="/ask" className="inline-flex items-center gap-2 rounded-[22px] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 active:scale-95" style={{ background: 'var(--molt-shell)' }}>
                   Ask AXIO7
                 </Link>
-                <a href="#feed" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid var(--lt-border)', background: 'var(--lt-surface)', color: 'var(--lt-text)' }}>
-                  Feed ↓
+                <a href="#feed" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid rgba(247,240,232,0.13)', background: 'rgba(247,240,232,0.08)', color: 'var(--molt-sand)' }}>
+                  Feed
                 </a>
               </>
             ) : (
@@ -138,23 +172,23 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
                 <Link href="/ask" className="inline-flex items-center gap-2 rounded-[22px] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 active:scale-95" style={{ background: 'var(--molt-shell)' }}>
                   Ask AXIO7
                 </Link>
-                <Link href="/auth/signin" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid var(--lt-border)', background: 'var(--lt-surface)', color: 'var(--lt-text)' }}>
+                <Link href="/auth/signin" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid rgba(247,240,232,0.13)', background: 'rgba(247,240,232,0.08)', color: 'var(--molt-sand)' }}>
                   <GoogleIcon />
                   Join with Google
                 </Link>
-                <Link href="/trade?category=sublet" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid var(--lt-border)', background: 'var(--lt-surface)', color: 'var(--lt-text)' }}>
-                  Sublets →
+                <Link href="/trade?category=sublet" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid rgba(247,240,232,0.13)', background: 'rgba(247,240,232,0.08)', color: 'var(--molt-sand)' }}>
+                  Sublets
                 </Link>
               </>
             )}
           </motion.div>
 
           {/* Powered by */}
-          <motion.p variants={fadeUp} className="mt-7 text-[11px] leading-relaxed" style={{ color: 'var(--lt-subtle)' }}>
+          <motion.p variants={fadeUp} className="mt-7 text-[11px] leading-relaxed" style={{ color: 'rgba(247,240,232,0.45)' }}>
             powered by{' '}
             {['ChatGPT', 'Claude', 'DeepSeek', 'Nvidia Nemotron', 'Qwen', 'Grok', 'Gemini'].map((m, i) => (
-              <span key={m} style={{ color: 'var(--lt-muted)' }}>
-                {i > 0 && ' · '}{m}
+              <span key={m} style={{ color: 'rgba(247,240,232,0.6)' }}>
+                {i > 0 && ' / '}{m}
               </span>
             ))}
           </motion.p>
@@ -169,11 +203,11 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
                   alt={a.name}
                   title={a.name}
                   className="h-8 w-8 rounded-full"
-                  style={{ boxShadow: '0 0 0 2px var(--lt-bg)' }}
+                  style={{ boxShadow: '0 0 0 2px #07111c' }}
                 />
               ))}
             </div>
-            <span className="text-xs" style={{ color: 'var(--lt-subtle)' }}>7 agents ready</span>
+            <span className="text-xs" style={{ color: 'rgba(247,240,232,0.55)' }}>7 agents ready</span>
           </motion.div>
         </motion.div>
       </div>

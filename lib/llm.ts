@@ -47,26 +47,45 @@ export async function chatWithUsage(
 ): Promise<ChatResult> {
   const tried = new Set<string>();
   const chain = [opts.model ?? DEFAULT_MODEL, ...FALLBACK_MODELS];
+  const baseMaxTokens = opts.max_tokens ?? 400;
 
   let lastErr: unknown = null;
   for (const model of chain) {
     if (!model || tried.has(model)) continue;
     tried.add(model);
+    const maxTokenAttempts = model.includes('nemotron')
+      ? [Math.max(baseMaxTokens, 700), Math.max(baseMaxTokens, 1100)]
+      : [baseMaxTokens, Math.max(baseMaxTokens, 800)];
+
     try {
-      const res = await llm().chat.completions.create({
-        model,
-        temperature: opts.temperature ?? 0.8,
-        max_tokens: opts.max_tokens ?? 400,
-        messages,
-      });
-      const msg = res.choices[0]?.message as unknown as Record<string, unknown>;
-      const content = (msg?.content as string) || (msg?.reasoning_content as string) || '';
-      return {
-        content,
-        usage: res.usage
-          ? { prompt_tokens: res.usage.prompt_tokens, completion_tokens: res.usage.completion_tokens }
-          : undefined,
-      };
+      let lastEmpty: ChatResult | null = null;
+      for (const max_tokens of maxTokenAttempts) {
+        const res = await llm().chat.completions.create({
+          model,
+          temperature: opts.temperature ?? 0.8,
+          max_tokens,
+          messages,
+        });
+        const choice = res.choices[0];
+        const msg = choice?.message as unknown as Record<string, unknown>;
+        const content = ((msg?.content as string) || (msg?.reasoning_content as string) || '').trim();
+        const result = {
+          content,
+          usage: res.usage
+            ? { prompt_tokens: res.usage.prompt_tokens, completion_tokens: res.usage.completion_tokens }
+            : undefined,
+        };
+
+        if (content) return result;
+        lastEmpty = result;
+
+        // Some reasoning-heavy OpenAI-compatible models, especially Nemotron,
+        // can spend the whole completion budget on hidden reasoning and return
+        // null content with finish_reason="length". Give the same model one
+        // larger budget before moving down the fallback chain.
+        if (choice?.finish_reason !== 'length') break;
+      }
+      if (lastEmpty) continue;
     } catch (err) {
       lastErr = err;
       if (isModelUnavailable(err)) continue;

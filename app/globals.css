@@ -32,14 +32,30 @@
   --font-inter: 'Inter', system-ui, sans-serif;
 }
 
-/* ── Global dark base (Home / Hero) ── */
+/* ── Global warm gold base ── */
 html, body {
   height: 100%;
-  background: var(--bg-deep);
-  color: var(--molt-sand);
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255,255,255,0.78), transparent 30rem),
+    linear-gradient(135deg, #fffaf2 0%, var(--lt-bg) 42%, #efe2d1 100%);
+  background-size: 140% 140%, 100% 100%;
+  color: var(--lt-text);
   font-family: var(--font-inter);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  animation: warmBackdropShift 26s ease-in-out infinite;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -20;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, rgba(255,255,255,0.36), transparent 32%, rgba(216,71,39,0.06) 58%, transparent),
+    repeating-radial-gradient(circle at 0 0, rgba(92,68,48,0.12) 0 1px, transparent 1px 34px);
+  opacity: 0.72;
 }
 
 /* ── Light-mode sub-pages wrapper ── */
@@ -136,6 +152,14 @@ html, body {
 @keyframes float {
   0%, 100% { transform: translateY(-8px); }
   50%       { transform: translateY(8px); }
+}
+@keyframes goldSweep {
+  0%, 100% { transform: translate3d(-2%, -1%, 0) scale(1); opacity: 0.72; }
+  50%      { transform: translate3d(2%, 1.5%, 0) scale(1.03); opacity: 0.9; }
+}
+@keyframes warmBackdropShift {
+  0%, 100% { background-position: 0% 0%, center; }
+  50%      { background-position: 100% 32%, center; }
 }
 
 /* Particle canvas (light pages) */

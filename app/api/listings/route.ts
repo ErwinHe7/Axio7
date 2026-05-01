@@ -37,14 +37,14 @@ export async function POST(req: Request) {
   const d = parsed.data;
   try {
     const user = await getCurrentUser();
-    const sellerEmail = d.seller_email?.trim() || user.email;
-    if (!sellerEmail) {
-      return NextResponse.json({ error: 'seller email is required' }, { status: 400 });
+    if (!user.authenticated || !user.email) {
+      return NextResponse.json({ error: 'Please sign in with Google before posting a listing.' }, { status: 401 });
     }
     const listing = await createListing({
       seller_id: user.id,
       seller_name: d.seller_name?.trim() || user.name,
-      seller_email: sellerEmail,
+      // Seller email is always taken from the authenticated account on the server.
+      seller_email: user.email,
       seller_contact: d.seller_contact?.trim() || null,
       category: d.category,
       title: d.title,

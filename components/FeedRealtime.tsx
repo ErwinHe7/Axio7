@@ -53,6 +53,16 @@ export function FeedRealtime({
             return [p, ...prev];
           });
         })
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, (payload) => {
+          const deletedPost = payload.old as { id?: string };
+          if (!deletedPost.id) return;
+          setPosts((prev) => prev.filter((p) => p.id !== deletedPost.id));
+          setRepliesMap((prev) => {
+            const next = { ...prev };
+            delete next[deletedPost.id!];
+            return next;
+          });
+        })
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'replies' }, (payload) => {
           const reply = payload.new as Reply;
           setRepliesMap((m) => {

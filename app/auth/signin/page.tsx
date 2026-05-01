@@ -1,12 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Loader2, Mail, LogIn } from 'lucide-react';
+import { Loader2, LogIn, Mail } from 'lucide-react';
 import { supabaseBrowser } from '@/lib/supabase-browser';
 
 export const dynamic = 'force-dynamic';
+
+const EMAIL_COOLDOWN_MS = 60_000;
+
+function friendlyAuthError(message: string | null) {
+  if (!message) return null;
+  const lower = message.toLowerCase();
+  if (lower.includes('rate limit')) {
+    return 'Too many email sign-in links were requested. Please wait about a minute, then try again, or continue with Google.';
+  }
+  if (lower.includes('pkce') || lower.includes('code verifier')) {
+    return 'That sign-in link was opened in a different browser session. Request a new email link here, then open it in this same browser. If QQ Mail opens its own browser, copy the link into Chrome/Safari.';
+  }
+  return message;
+}
+
+function cooldownKey(email: string) {
+  return `axio7_magic_link_last_sent:${email.toLowerCase()}`;
+}
 
 export default function SignInPage() {
   const params = useSearchParams();
@@ -16,8 +34,17 @@ export default function SignInPage() {
   const [email, setEmail] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [error, setError] = useState<string | null>(initialError);
+  const [error, setError] = useState<string | null>(friendlyAuthError(initialError));
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const secondsRemaining = Math.max(0, Math.ceil((cooldownUntil - now) / 1000));
 
   async function signInWithGoogle() {
     setError(null);
@@ -32,27 +59,45 @@ export default function SignInPage() {
       if (error) throw error;
       // Browser will redirect; loader stays until then.
     } catch (err: any) {
-      setError(err?.message ?? 'Google sign-in failed.');
+      setError(friendlyAuthError(err?.message) ?? 'Google sign-in failed.');
       setGoogleLoading(false);
     }
   }
 
   async function signInWithEmail(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) return;
+
+    const lastSent = Number(window.localStorage.getItem(cooldownKey(normalizedEmail)) ?? 0);
+    const waitMs = lastSent + EMAIL_COOLDOWN_MS - Date.now();
+    if (waitMs > 0) {
+      const seconds = Math.ceil(waitMs / 1000);
+      setCooldownUntil(lastSent + EMAIL_COOLDOWN_MS);
+      setError(`Please wait ${seconds} seconds before requesting another email link.`);
+      return;
+    }
+
     setError(null);
     setEmailLoading(true);
     try {
       const supabase = supabaseBrowser();
       const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
       const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
+        email: normalizedEmail,
         options: { emailRedirectTo },
       });
       if (error) throw error;
-      setSentTo(email.trim());
+      const sentAt = Date.now();
+      window.localStorage.setItem(cooldownKey(normalizedEmail), String(sentAt));
+      setCooldownUntil(sentAt + EMAIL_COOLDOWN_MS);
+      setSentTo(normalizedEmail);
     } catch (err: any) {
-      setError(err?.message ?? 'Magic link failed.');
+      const message = friendlyAuthError(err?.message) ?? 'Magic link failed.';
+      if (message.toLowerCase().includes('too many email sign-in links')) {
+        setCooldownUntil(Date.now() + EMAIL_COOLDOWN_MS);
+      }
+      setError(message);
     } finally {
       setEmailLoading(false);
     }
@@ -76,8 +121,8 @@ export default function SignInPage() {
 
         {sentTo ? (
           <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-            Magic link sent to <strong>{sentTo}</strong>. Check your inbox — the link signs you in for
-            this browser.
+            Magic link sent to <strong>{sentTo}</strong>. Open it in this same browser. If QQ Mail opens its own browser,
+            copy the link into Chrome/Safari.
           </div>
         ) : (
           <>
@@ -116,11 +161,11 @@ export default function SignInPage() {
               </label>
               <button
                 type="submit"
-                disabled={emailLoading || !email.trim()}
+                disabled={emailLoading || !email.trim() || secondsRemaining > 0}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-[var(--molt-shell)] px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
               >
                 {emailLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                Send magic link
+                {secondsRemaining > 0 ? `Try again in ${secondsRemaining}s` : 'Send magic link'}
               </button>
             </form>
           </>

@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { AGENTS } from './agents';
 import { chatWithUsage } from './llm';
+import { cleanAgentReply, isNonAnswerReply } from './agent-output';
 import { createReply, getPost, incrementLike, listListings } from './store';
 import { startPostTrace, tracedLLMCall, flushTraces, type TraceContext } from './observability/llm-tracer';
 import { detectEventIntent, searchEvents, formatEventsForAgentContext } from './events/search';
@@ -98,6 +99,29 @@ export async function fanOutAgentReplies(
 
 type AgentRunResult = { ok: true; costUsd: number } | { ok: false; error: unknown };
 
+async function recoverAgentReply(
+  agent: AgentPersona,
+  userContent: string
+): Promise<{ content: string; costUsd: number }> {
+  const result = await chatWithUsage(
+    [
+      {
+        role: 'system',
+        content: `${agent.system_prompt}
+
+Important: never output "No response", "topic unrelated", or any refusal placeholder. If the post is vague or outside your specialty, still give a grounded practical take that fits the post.`,
+      },
+      { role: 'user', content: userContent },
+    ],
+    {
+      model: agent.id === 'ember' ? 'openai/gpt-4o-mini' : agent.model,
+      temperature: 0.7,
+      max_tokens: 260,
+    }
+  );
+  return { content: cleanAgentReply(result.content), costUsd: 0 };
+}
+
 async function runOneAgent(
   agent: AgentPersona,
   post: Post,
@@ -132,14 +156,21 @@ async function runOneAgent(
           {
             model: agent.model,
             temperature: 0.8,
-            max_tokens: agent.model?.includes('kimi') ? 800 : 220,
+            max_tokens: agent.model?.includes('nemotron') || agent.model?.includes('kimi') ? 800 : 220,
           }
         ),
       traceCtx
     );
 
-    const trimmed = result.content?.trim();
-    if (!trimmed) {
+    let trimmed = cleanAgentReply(result.content);
+    let costUsd = result.costUsd;
+    if (!trimmed || isNonAnswerReply(trimmed)) {
+      const recovered = await recoverAgentReply(agent, userContent);
+      trimmed = recovered.content;
+      costUsd += recovered.costUsd;
+    }
+
+    if (!trimmed || isNonAnswerReply(trimmed)) {
       return { ok: false, error: 'empty completion' };
     }
 
@@ -159,7 +190,7 @@ async function runOneAgent(
       }),
     ]);
 
-    return { ok: true, costUsd: result.costUsd };
+    return { ok: true, costUsd };
   } catch (err) {
     Sentry.captureException(err, {
       extra: {

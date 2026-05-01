@@ -18,6 +18,7 @@ export default async function ListingDetail({ params }: { params: { id: string }
     getCurrentUser(),
   ]);
   const publicListing = { ...listing, seller_email: null, seller_contact: null };
+  const publicUser = { id: user.id, name: user.name, authenticated: user.authenticated };
 
   return (
     <LightPage>
@@ -93,7 +94,7 @@ export default async function ListingDetail({ params }: { params: { id: string }
           </Link>
         )}
 
-        <BidPanel listing={publicListing} user={user} />
+        <BidPanel listing={publicListing} user={publicUser} />
       </div>
     </LightPage>
   );

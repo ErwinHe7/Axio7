@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { getPost, listReplies } from '@/lib/store';
 import { PostCard } from '@/components/PostCard';
+import { getCurrentUser, isAdmin } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
 }
 
 export default async function PostDetail({ params }: { params: { id: string } }) {
-  const post = await getPost(params.id);
+  const [post, user] = await Promise.all([getPost(params.id), getCurrentUser()]);
   if (!post) return notFound();
   const replies = await listReplies(post.id);
 
@@ -48,7 +49,12 @@ export default async function PostDetail({ params }: { params: { id: string } })
       <Link href="/" className="inline-flex items-center gap-1 text-sm text-ink-muted hover:text-ink">
         <ArrowLeft className="h-4 w-4" /> Back to Feed
       </Link>
-      <PostCard post={post} replies={replies} />
+      <PostCard
+        post={post}
+        replies={replies}
+        canDelete={isAdmin(user) || post.author_id === user.id}
+        canPin={isAdmin(user)}
+      />
     </div></LightPage>
   );
 }

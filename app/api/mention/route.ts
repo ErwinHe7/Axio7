@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { AGENTS, getAgent } from '@/lib/agents';
-import { chat } from '@/lib/llm';
+import { chat, chatWithUsage } from '@/lib/llm';
+import { cleanAgentReply, isNonAnswerReply } from '@/lib/agent-output';
 import { createReply, getPost, listListings } from '@/lib/store';
 import { formatCents } from '@/lib/format';
 import type { Listing } from '@/lib/types';
@@ -118,16 +119,46 @@ export async function POST(req: Request) {
       content = await atlasWithContext(post_id, comment, post.content);
     } else {
       // Generic agent with user comment as context
-      content = await chat(
-        [
+      const messages: { role: 'system' | 'user'; content: string }[] = [
           { role: 'system', content: agent.system_prompt },
           {
             role: 'user',
             content: `Post: "${post.content.slice(0, 300)}"\n\nA user @mentioned you and asked: "${comment}"\n\nReply directly to their question, in character. Under 70 words.`,
           },
-        ],
-        { model: agent.model, temperature: 0.8, max_tokens: 200 }
-      );
+        ];
+      const primary = await chatWithUsage(messages, {
+        model: agent.model,
+        temperature: 0.8,
+        max_tokens: agent.model?.includes('nemotron') ? 800 : 200,
+      });
+      content = cleanAgentReply(primary.content);
+
+      if (isNonAnswerReply(content)) {
+        const recovery = await chatWithUsage(
+          [
+            {
+              role: 'system',
+              content: `${agent.system_prompt}
+
+Never output "No response", "topic unrelated", or any refusal placeholder. If the post is vague or outside your specialty, still give a grounded practical take.`,
+            },
+            {
+              role: 'user',
+              content: `Post: "${post.content.slice(0, 300)}"\n\nA user @mentioned you and asked: "${comment}"\n\nReply directly in under 70 words.`,
+            },
+          ],
+          {
+            model: agent.id === 'ember' ? 'openai/gpt-4o-mini' : agent.model,
+            temperature: 0.7,
+            max_tokens: 260,
+          }
+        );
+        content = cleanAgentReply(recovery.content);
+      }
+    }
+
+    if (isNonAnswerReply(content)) {
+      throw new Error('agent returned an empty or refusal-style reply');
     }
 
     const agentReply = await createReply({

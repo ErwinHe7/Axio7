@@ -12,18 +12,21 @@ export function isSupabaseConfigured(): boolean {
   );
 }
 
+type CookieToSet = { name: string; value: string; options: CookieOptions };
+
 export function supabaseServer() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
   const cookieStore = cookies();
   return createServerClient(url, anonKey, {
     cookies: {
-      get(name: string) { return cookieStore.get(name)?.value; },
-      set(name: string, value: string, options: CookieOptions) {
-        try { cookieStore.set({ name, value, ...options }); } catch {}
+      getAll() {
+        return cookieStore.getAll().map(({ name, value }) => ({ name, value }));
       },
-      remove(name: string, options: CookieOptions) {
-        try { cookieStore.set({ name, value: '', ...options }); } catch {}
+      setAll(cookiesToSet: CookieToSet[]) {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          try { cookieStore.set({ name, value, ...options }); } catch {}
+        });
       },
     },
   });

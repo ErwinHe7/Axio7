@@ -3,6 +3,7 @@ import { Plus, Home, BedDouble, Sofa, Smartphone, BookOpen, Hammer, Package, Tic
 import { LightPage } from '@/components/LightPage';
 import { listListings } from '@/lib/store';
 import { ListingCard } from '@/components/ListingCard';
+import { getCurrentUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,8 @@ export default async function TradePage({
   const category = searchParams?.category;
 
   let listings: Awaited<ReturnType<typeof listListings>> = [];
+  const user = await getCurrentUser();
+  const publicUser = { id: user.id, name: user.name, authenticated: user.authenticated };
   try {
     listings = await listListings({ category: category ? dbCategory(category) : undefined });
   } catch (err) {
@@ -117,7 +120,11 @@ export default async function TradePage({
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
+              <ListingCard
+                key={listing.id}
+                listing={{ ...listing, seller_email: null, seller_contact: null }}
+                user={publicUser}
+              />
             ))}
           </div>
         )}

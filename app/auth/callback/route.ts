@@ -1,9 +1,23 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { trackServerEvent } from '@/lib/observability/posthog-server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+type CookieToSet = { name: string; value: string; options: CookieOptions };
+
+function friendlyAuthError(message: string) {
+  const lower = message.toLowerCase();
+  if (lower.includes('pkce') || lower.includes('code verifier')) {
+    return 'That sign-in link was opened in a different browser session. Request a new email link here, then open it in this same browser. If QQ Mail opens its own browser, copy the link into Chrome/Safari.';
+  }
+  if (lower.includes('rate limit')) {
+    return 'Too many email sign-in links were requested. Please wait a minute, then try again, or continue with Google.';
+  }
+  return message;
+}
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -27,22 +41,20 @@ export async function GET(req: Request) {
 
   // Build response before cookie operations so we write auth cookies onto the redirect.
   const response = NextResponse.redirect(redirectTo);
+  const cookieStore = cookies();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          const cookie = req.headers.get('cookie') ?? '';
-          const match = cookie.split('; ').find((c) => c.startsWith(`${name}=`));
-          return match ? decodeURIComponent(match.split('=').slice(1).join('=')) : undefined;
+        getAll() {
+          return cookieStore.getAll().map(({ name, value }) => ({ name, value }));
         },
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set({ name, value: '', ...options, maxAge: 0 });
+        setAll(cookiesToSet: CookieToSet[]) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set({ name, value, ...options });
+          });
         },
       },
     }
@@ -52,7 +64,8 @@ export async function GET(req: Request) {
 
   if (error) {
     const signin = new URL('/auth/signin', url.origin);
-    signin.searchParams.set('error', error.message);
+    signin.searchParams.set('error', friendlyAuthError(error.message));
+    signin.searchParams.set('next', next);
     return NextResponse.redirect(signin);
   }
 

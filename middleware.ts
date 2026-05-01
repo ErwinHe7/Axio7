@@ -2,6 +2,8 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { createAxioHandle, GUEST_COOKIE, normalizeAxioHandle } from '@/lib/guest-identity';
 
+type CookieToSet = { name: string; value: string; options: CookieOptions };
+
 /**
  * Runs on every request that isn't a static asset.
  *
@@ -21,16 +23,14 @@ export async function middleware(req: NextRequest) {
   if (url && anon) {
     const supabase = createServerClient(url, anon, {
       cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value;
+        getAll() {
+          return req.cookies.getAll().map(({ name, value }) => ({ name, value }));
         },
-        set(name: string, value: string, options: CookieOptions) {
-          req.cookies.set({ name, value, ...options });
-          res.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          req.cookies.set({ name, value: '', ...options });
-          res.cookies.set({ name, value: '', ...options });
+        setAll(cookiesToSet: CookieToSet[]) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            req.cookies.set({ name, value, ...options });
+            res.cookies.set({ name, value, ...options });
+          });
         },
       },
     });
