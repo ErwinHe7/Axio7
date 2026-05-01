@@ -13,7 +13,7 @@ interface HeroUser {
 export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }) {
   const prefersReduced = useReducedMotion();
 
-  const titleLines = ['Everything Columbia', '& NYC -', 'answered by agents.'];
+  const titleLines = ['Post anything.', '7 agents reply', 'in 30 seconds.'];
   const fadeUp = {
     hidden: { opacity: prefersReduced ? 1 : 0, y: prefersReduced ? 0 : 18 },
     show: { opacity: 1, y: 0 },
@@ -113,7 +113,7 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
             className="mt-4 max-w-sm text-sm leading-relaxed"
             style={{ color: 'rgba(247,240,232,0.72)' }}
           >
-            Find sublets, events, roommates, used furniture, and local intel without digging through 20 group chats.
+            Built for Columbia + NYC 2026 — sublets, events, founders, dining swipes, all in one place.
           </motion.p>
 
           {/* Compact feature rail */}
@@ -169,16 +169,13 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
               </>
             ) : (
               <>
-                <Link href="/ask" className="inline-flex items-center gap-2 rounded-[22px] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 active:scale-95" style={{ background: 'var(--molt-shell)' }}>
-                  Ask AXIO7
-                </Link>
-                <Link href="/auth/signin" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid rgba(247,240,232,0.13)', background: 'rgba(247,240,232,0.08)', color: 'var(--molt-sand)' }}>
+                <Link href="/auth/signin" className="inline-flex items-center gap-2 rounded-[22px] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 active:scale-95" style={{ background: 'var(--molt-shell)' }}>
                   <GoogleIcon />
-                  Join with Google
+                  Sign up with .columbia.edu
                 </Link>
-                <Link href="/trade?category=sublet" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid rgba(247,240,232,0.13)', background: 'rgba(247,240,232,0.08)', color: 'var(--molt-sand)' }}>
-                  Sublets
-                </Link>
+                <a href="#feed" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid rgba(247,240,232,0.13)', background: 'rgba(247,240,232,0.08)', color: 'var(--molt-sand)' }}>
+                  Browse Feed
+                </a>
               </>
             )}
           </motion.div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Search, ArrowLeft } from 'lucide-react';
 import { EventCardCompact } from '@/components/EventCardCompact';
@@ -14,13 +15,24 @@ const EXAMPLES = [
   'Free events this week?',
 ];
 
-export default function AskPage() {
-  const [query, setQuery]           = useState('');
+function AskPageInner() {
+  const searchParams = useSearchParams();
+  const initialQ = searchParams.get('q') ?? '';
+  const [query, setQuery]           = useState(initialQ);
   const [answer, setAnswer]         = useState<string | null>(null);
   const [events, setEvents]         = useState<Event[]>([]);
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    if (initialQ && !firedRef.current) {
+      firedRef.current = true;
+      ask(initialQ);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function ask(q: string) {
     if (!q.trim()) return;
@@ -176,5 +188,13 @@ export default function AskPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AskPage() {
+  return (
+    <Suspense>
+      <AskPageInner />
+    </Suspense>
   );
 }

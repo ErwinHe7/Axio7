@@ -8,10 +8,18 @@ import { trackPostCreated } from '@/components/PostHogProvider';
 
 type UploadedImage = { url: string; preview: string };
 
+const QUICK_CHIPS = [
+  { label: '🏠 Find me a sublet near campus', text: 'Looking for a sublet near Columbia campus. Any leads?' },
+  { label: '🎉 NYC this weekend?', text: "What's happening in NYC this weekend? Events, parties, anything fun?" },
+  { label: '💼 Connect with founders', text: 'Looking to connect with NYC founders working on interesting problems. Who should I meet?' },
+  { label: '🍱 Dining swipes for sale?', text: 'Anyone selling dining swipes today? How much?' },
+];
+
 export function PostComposer() {
   const [content, setContent] = useState('');
   const [name, setName] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
+  const [mode, setMode] = useState<'post' | 'ask'>('post');
 
   // Pre-fill name from Supabase session if signed in
   useEffect(() => {
@@ -85,6 +93,13 @@ export function PostComposer() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!content.trim() || submitting) return;
+
+    // Ask mode: redirect to /ask page with query pre-filled
+    if (mode === 'ask') {
+      window.location.href = `/ask?q=${encodeURIComponent(content.trim())}`;
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch('/api/posts', {
@@ -129,6 +144,11 @@ export function PostComposer() {
 
   const expanded = focused || content.length > 0 || images.length > 0;
 
+  function fillChip(text: string) {
+    setContent(text);
+    setFocused(true);
+  }
+
   return (
     <form
       onSubmit={submit}
@@ -139,6 +159,41 @@ export function PostComposer() {
         boxShadow: expanded ? '0 0 0 3px rgba(216,71,39,0.12)' : '0 2px 8px rgba(0,0,0,0.06)',
       }}
     >
+      {/* Post / Ask mode toggle */}
+      <div className="mb-3 flex gap-1 rounded-xl p-0.5 w-fit" style={{ background: 'rgba(0,0,0,0.06)' }}>
+        {(['post', 'ask'] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMode(m)}
+            className="rounded-lg px-3 py-1 text-xs font-semibold capitalize transition"
+            style={mode === m
+              ? { background: 'white', color: 'var(--lt-text)', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }
+              : { color: 'var(--lt-muted)' }
+            }
+          >
+            {m}
+          </button>
+        ))}
+      </div>
+
+      {/* Quick suggestion chips */}
+      {!expanded && (
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {QUICK_CHIPS.map((c) => (
+            <button
+              key={c.label}
+              type="button"
+              onClick={() => fillChip(c.text)}
+              className="rounded-full px-3 py-1 text-[11px] font-medium transition hover:opacity-80"
+              style={{ background: 'rgba(216,71,39,0.07)', border: '1px solid rgba(216,71,39,0.18)', color: 'var(--molt-shell)' }}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-start gap-3">
         <span className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-[var(--molt-coral)]/30 text-xs font-black italic" style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--molt-sand)' }}>
           AX7
@@ -157,7 +212,7 @@ export function PostComposer() {
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             rows={expanded ? 4 : 2}
-            placeholder="Post something."
+            placeholder={mode === 'ask' ? 'Ask anything — only you see the answer.' : 'Post something.'}
             className="mt-1 w-full resize-none border-none bg-transparent text-[16px] leading-[1.6] focus:outline-none"
             style={{ color: 'var(--lt-text)', caretColor: 'var(--molt-shell)' }}
           />
@@ -268,7 +323,7 @@ export function PostComposer() {
           style={{ background: 'var(--molt-shell)' }}
         >
           {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          Post
+          {mode === 'ask' ? 'Ask' : 'Post'}
         </button>
       </div>
     </form>
