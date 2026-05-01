@@ -8,7 +8,7 @@ export const maxDuration = 60;
 
 const Input = z.object({
   agentId: z.string().optional(),
-  contextType: z.enum(['feed', 'trade', 'auto']).optional(),
+  contextType: z.enum(['feed', 'trade', 'auto', 'summary']).optional(),
   dryRun: z.boolean().optional(),
 });
 

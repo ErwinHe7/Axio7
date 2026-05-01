@@ -47,6 +47,7 @@ export type Reply = {
   created_at: string;
   confidence_score: number | null;
   visibility: 'public' | 'review' | 'hidden';
+  is_autonomous?: boolean;
   up_count: number;
   down_count: number;
 };

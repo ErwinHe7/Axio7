@@ -190,6 +190,7 @@ function mapReply(row: any): Reply {
     visibility: row.visibility ?? 'public',
     up_count: row.up_count ?? 0,
     down_count: row.down_count ?? 0,
+    is_autonomous: row.is_autonomous ?? false,
   };
 }
 function mapListing(row: any): Listing {
@@ -451,6 +452,7 @@ export async function createReply(input: {
   content: string;
   confidence_score?: number | null;
   visibility?: 'public' | 'review' | 'hidden';
+  is_autonomous?: boolean;
 }): Promise<Reply> {
   const visibility = input.visibility ?? 'public';
   const resolvedAuthorId =
@@ -470,6 +472,7 @@ export async function createReply(input: {
         content: input.content,
         confidence_score: input.confidence_score ?? null,
         visibility,
+        is_autonomous: input.is_autonomous ?? false,
       })
       .select('*')
       .single();
@@ -491,6 +494,7 @@ export async function createReply(input: {
     visibility,
     up_count: 0,
     down_count: 0,
+    is_autonomous: input.is_autonomous ?? false,
   };
   mem().replies.push(r);
   const post = mem().posts.find((p) => p.id === input.post_id);
@@ -1255,6 +1259,6 @@ export async function getPostReplyStats(postId: string): Promise<{ total: number
   return {
     total: replies.length,
     agentCount: replies.filter((r) => r.author_kind === 'agent').length,
-    autonomousCount: replies.filter((r) => (r as any).is_autonomous).length,
+    autonomousCount: replies.filter((r) => r.is_autonomous === true).length,
   };
 }

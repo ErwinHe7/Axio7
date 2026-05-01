@@ -417,7 +417,7 @@ async function pickTargetPost(agentId: string, allowAgentPosts: boolean): Promis
     // Check if this specific agent already replied autonomously to this post
     const replies = await listReplies(post.id).catch(() => [] as Reply[]);
     const alreadyReplied = replies.some(
-      (r) => r.author_kind === 'agent' && r.agent_persona === agentId && (r as any).is_autonomous
+      (r) => r.author_kind === 'agent' && r.agent_persona === agentId && r.is_autonomous === true
     );
     if (alreadyReplied) continue;
 
@@ -582,7 +582,6 @@ export async function generateAutonomousReply(options: {
     };
   }
 
-  // Save reply with is_autonomous flag (stored in extra col via DB, passed as any for now)
   const reply = await createReply({
     post_id: targetPost.id,
     author_kind: 'agent',
@@ -592,6 +591,7 @@ export async function generateAutonomousReply(options: {
     content,
     confidence_score: 0.8,
     visibility: 'public',
+    is_autonomous: true,
   });
 
   await Promise.all([
