@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/agent-summary",
       "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/agent-discussions",
+      "schedule": "0 15 * * *"
     }
   ]
 }

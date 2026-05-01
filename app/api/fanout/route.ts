@@ -5,6 +5,7 @@ import { getPost } from '@/lib/store';
 import { classifyQuery } from '@/lib/query-router';
 import { getCurrentUser } from '@/lib/auth';
 import { trackServerEvent } from '@/lib/observability/posthog-server';
+import { runAgentDiscussion, isDiscussionsEnabled } from '@/lib/agent-discussions';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -89,6 +90,17 @@ export async function POST(req: Request) {
     });
   } catch {
     // non-blocking
+  }
+
+  // Fire-and-forget discussion round 1 after initial fanout
+  // Only for panel-mode (multi-agent) posts, not single-agent utility replies
+  if (isDiscussionsEnabled() && decision.mode === 'panel' && result.succeeded > 0) {
+    // Delay 90s so initial replies are visible before discussion starts
+    setTimeout(() => {
+      runAgentDiscussion(post_id, { rounds: 1 }).catch((err) => {
+        console.warn('[discussion] auto-trigger failed', err?.message);
+      });
+    }, 90_000);
   }
 
   return NextResponse.json({ ...result, routing_mode: decision.mode });

@@ -483,6 +483,10 @@ export async function createReply(input: {
   confidence_score?: number | null;
   visibility?: 'public' | 'review' | 'hidden';
   is_autonomous?: boolean;
+  // Discussion engine fields (added in migration 010)
+  reply_type?: 'human' | 'agent_initial' | 'agent_discussion';
+  parent_reply_id?: string | null;
+  discussion_round?: number;
 }): Promise<Reply> {
   const visibility = input.visibility ?? 'public';
   const resolvedAuthorId =
@@ -504,6 +508,9 @@ export async function createReply(input: {
     const fullReplyPayload = {
       ...baseReplyPayload,
       is_autonomous: input.is_autonomous ?? false,
+      reply_type: input.reply_type ?? (input.author_kind === 'human' ? 'human' : 'agent_initial'),
+      parent_reply_id: input.parent_reply_id ?? null,
+      discussion_round: input.discussion_round ?? 0,
     };
 
     let data: any = null;
@@ -1315,4 +1322,91 @@ export async function getPostReplyStats(postId: string): Promise<{ total: number
     agentCount: replies.filter((r) => r.author_kind === 'agent').length,
     autonomousCount: replies.filter((r) => r.is_autonomous === true).length,
   };
+}
+
+// ===== Agent Discussion Engine helpers =====
+
+export async function getDiscussionRoundForPost(postId: string): Promise<number> {
+  if (!usingDB()) return 0;
+  const { data } = await supabaseAdmin()
+    .from('agent_discussion_jobs')
+    .select('round')
+    .eq('post_id', postId)
+    .eq('status', 'completed')
+    .order('round', { ascending: false })
+    .limit(1)
+    .single();
+  return data?.round ?? 0;
+}
+
+export async function countAgentDiscussionReplies(postId: string): Promise<number> {
+  if (!usingDB()) return 0;
+  const { count } = await supabaseAdmin()
+    .from('replies')
+    .select('*', { count: 'exact', head: true })
+    .eq('post_id', postId)
+    .eq('author_kind', 'agent') as any;
+  return count ?? 0;
+}
+
+export async function isDiscussionJobRunning(postId: string): Promise<boolean> {
+  if (!usingDB()) return false;
+  const { data } = await supabaseAdmin()
+    .from('agent_discussion_jobs')
+    .select('id')
+    .eq('post_id', postId)
+    .in('status', ['queued', 'running'])
+    .limit(1)
+    .single();
+  return !!data;
+}
+
+export async function createDiscussionJob(postId: string, round: number): Promise<string | null> {
+  if (!usingDB()) return null;
+  const { data } = await supabaseAdmin()
+    .from('agent_discussion_jobs')
+    .insert({ post_id: postId, round, status: 'running', started_at: new Date().toISOString() })
+    .select('id')
+    .single();
+  return data?.id ?? null;
+}
+
+export async function finishDiscussionJob(
+  jobId: string,
+  status: 'completed' | 'failed' | 'skipped',
+  opts: { inserted?: number; error?: string } = {}
+): Promise<void> {
+  if (!usingDB() || !jobId) return;
+  await supabaseAdmin()
+    .from('agent_discussion_jobs')
+    .update({
+      status,
+      replies_inserted: opts.inserted ?? 0,
+      finished_at: new Date().toISOString(),
+      error_message: opts.error ?? null,
+    })
+    .eq('id', jobId);
+}
+
+export async function getHourlyDiscussionCount(): Promise<number> {
+  if (!usingDB()) return 0;
+  const oneHourAgo = new Date(Date.now() - 3_600_000).toISOString();
+  const { count } = await supabaseAdmin()
+    .from('agent_discussion_jobs')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'completed')
+    .gte('finished_at', oneHourAgo) as any;
+  return count ?? 0;
+}
+
+export async function getRecentHotPosts(limit = 10): Promise<Post[]> {
+  if (!usingDB()) return [];
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString();
+  const { data } = await supabaseAdmin()
+    .from('posts')
+    .select('*')
+    .gte('created_at', yesterday)
+    .order('reply_count', { ascending: false })
+    .limit(limit);
+  return (data ?? []).map(mapPost);
 }
