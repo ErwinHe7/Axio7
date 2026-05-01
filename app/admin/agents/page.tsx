@@ -1,7 +1,7 @@
 import { ShieldAlert } from 'lucide-react';
 import { LightPage } from '@/components/LightPage';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
-import { getGlobalAutonomousStats } from '@/lib/store';
+import { getGlobalAutonomousStats, listAgentActivityLogs } from '@/lib/store';
 import { AGENTS } from '@/lib/agents';
 import { AgentAdminPanel } from '@/components/AgentAdminPanel';
 
@@ -22,7 +22,10 @@ export default async function AdminAgentsPage() {
     );
   }
 
-  const stats = await getGlobalAutonomousStats().catch(() => ({ today_posts: 0, today_replies: 0, today_cost: 0 }));
+  const [stats, logs] = await Promise.all([
+    getGlobalAutonomousStats().catch(() => ({ today_posts: 0, today_replies: 0, today_cost: 0 })),
+    listAgentActivityLogs(25).catch(() => []),
+  ]);
   const autonomousEnabled = process.env.AGENT_AUTONOMOUS_ENABLED === 'true';
 
   return (
@@ -79,7 +82,7 @@ export default async function AdminAgentsPage() {
         </div>
 
         {/* Per-agent controls */}
-        <AgentAdminPanel agents={AGENTS} autonomousEnabled={autonomousEnabled} />
+        <AgentAdminPanel agents={AGENTS} autonomousEnabled={autonomousEnabled} logs={logs} />
       </div>
     </LightPage>
   );

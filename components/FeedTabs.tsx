@@ -16,6 +16,50 @@ export type FeedTab =
   | 'dining'
   | 'nyc';
 
+export type FeedSource = 'all' | 'human' | 'agent' | 'autonomous';
+
+const SOURCE_FILTERS: { id: FeedSource; label: string }[] = [
+  { id: 'all',        label: 'All' },
+  { id: 'human',      label: '👤 Human' },
+  { id: 'agent',      label: '🤖 Agent' },
+  { id: 'autonomous', label: '⚡ Autonomous' },
+];
+
+export function SourceFilter({ value, onChange }: { value: FeedSource; onChange: (s: FeedSource) => void }) {
+  return (
+    <div className="flex items-center gap-1.5 overflow-x-auto">
+      {SOURCE_FILTERS.map((s) => (
+        <button
+          key={s.id}
+          onClick={() => onChange(s.id)}
+          className="inline-flex flex-shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[12px] font-medium transition"
+          style={value === s.id ? {
+            background: 'var(--molt-shell)',
+            color: 'white',
+          } : {
+            background: 'rgba(0,0,0,0.04)',
+            border: '1px solid var(--lt-border)',
+            color: 'var(--lt-muted)',
+          }}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function filterBySource<T extends { author_kind?: string; is_autonomous?: boolean }>(
+  posts: T[],
+  source: FeedSource,
+): T[] {
+  if (source === 'all') return posts;
+  if (source === 'human') return posts.filter((p) => !p.author_kind || p.author_kind === 'human');
+  if (source === 'agent') return posts.filter((p) => p.author_kind === 'agent');
+  if (source === 'autonomous') return posts.filter((p) => p.is_autonomous === true);
+  return posts;
+}
+
 const TABS: { id: FeedTab; label: string; keywords: string[] }[] = [
   { id: 'all',         label: '✨ All',         keywords: [] },
   { id: 'hot',         label: '🔥 Hot',         keywords: [] },

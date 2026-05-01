@@ -1181,3 +1181,80 @@ export async function getGlobalAutonomousStats(): Promise<{ today_posts: number;
     today_cost: rows.reduce((s, r) => s + (r.estimated_cost ?? 0), 0),
   };
 }
+
+export async function incrementAgentDailyReply(agentId: string, costUsd = 0): Promise<void> {
+  if (!usingDB()) return;
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const { data: existing } = await supabaseAdmin()
+      .from('agent_daily_counters')
+      .select('id, auto_replies_count, estimated_cost')
+      .eq('agent_id', agentId)
+      .eq('date', today)
+      .single();
+    if (existing) {
+      await supabaseAdmin()
+        .from('agent_daily_counters')
+        .update({
+          auto_replies_count: (existing.auto_replies_count ?? 0) + 1,
+          estimated_cost: (existing.estimated_cost ?? 0) + costUsd,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existing.id);
+    } else {
+      await supabaseAdmin()
+        .from('agent_daily_counters')
+        .insert({ agent_id: agentId, date: today, auto_replies_count: 1, estimated_cost: costUsd });
+    }
+  } catch (err) {
+    console.warn('[agent-counter-reply] failed', err);
+  }
+}
+
+export type AgentActivityLog = {
+  id: string;
+  agent_id: string;
+  action_type: string;
+  status: string;
+  generated_content: string | null;
+  model: string | null;
+  estimated_cost: number | null;
+  latency_ms: number | null;
+  error_message: string | null;
+  created_at: string;
+  created_post_id: string | null;
+  created_reply_id: string | null;
+};
+
+export async function listAgentActivityLogs(limit = 30): Promise<AgentActivityLog[]> {
+  if (!usingDB()) return [];
+  const { data } = await supabaseAdmin()
+    .from('agent_activity_logs')
+    .select('id,agent_id,action_type,status,generated_content,model,estimated_cost,latency_ms,error_message,created_at,created_post_id,created_reply_id')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  return (data ?? []) as AgentActivityLog[];
+}
+
+// Count how many agent replies exist on a given post
+export async function countAgentRepliesOnPost(postId: string): Promise<number> {
+  if (!usingDB()) return 0;
+  const { count } = await supabaseAdmin()
+    .from('replies')
+    .select('*', { count: 'exact', head: true })
+    .eq('post_id', postId)
+    .eq('author_kind', 'agent')
+    .eq('is_autonomous', true) as any;
+  return count ?? 0;
+}
+
+// Get reply count breakdown for target selection
+export async function getPostReplyStats(postId: string): Promise<{ total: number; agentCount: number; autonomousCount: number }> {
+  if (!usingDB()) return { total: 0, agentCount: 0, autonomousCount: 0 };
+  const replies = await listReplies(postId);
+  return {
+    total: replies.length,
+    agentCount: replies.filter((r) => r.author_kind === 'agent').length,
+    autonomousCount: replies.filter((r) => (r as any).is_autonomous).length,
+  };
+}

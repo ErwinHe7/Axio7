@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Post, Reply } from '@/lib/types';
 import { PostCard } from './PostCard';
-import { FeedTabs, filterByTab, type FeedTab } from './FeedTabs';
+import { FeedTabs, filterByTab, filterBySource, SourceFilter, type FeedTab, type FeedSource } from './FeedTabs';
 
 /**
  * Wraps the initial SSR-rendered post list and subscribes to Supabase Realtime.
@@ -30,6 +30,7 @@ export function FeedRealtime({
   });
   const [newPostIds, setNewPostIds] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<FeedTab>('all');
+  const [source, setSource] = useState<FeedSource>('all');
   const channelRef = useRef<ReturnType<ReturnType<typeof import('../lib/supabase-browser').supabaseBrowser>['channel']> | null>(null);
 
   useEffect(() => {
@@ -115,16 +116,24 @@ export function FeedRealtime({
     return () => window.removeEventListener('axio7:new-post', handleNewPost);
   }, []);
 
-  const visible = useMemo(() => filterByTab(posts, tab), [posts, tab]);
+  const visible = useMemo(
+    () => filterBySource(filterByTab(posts, tab), source),
+    [posts, tab, source]
+  );
 
   return (
     <div>
       <FeedTabs value={tab} onChange={setTab} />
 
+      {/* Source filter row */}
+      <div className="mt-2 px-0.5">
+        <SourceFilter value={source} onChange={setSource} />
+      </div>
+
       <div className="mt-4 space-y-4">
         {visible.length === 0 ? (
           <div className="rounded-[22px] border border-dashed border-slate-300 bg-white/60 p-10 text-center text-sm text-ink-muted">
-            No posts in <span className="font-medium">{tab}</span> yet — be the first.
+            No {source !== 'all' ? source + ' ' : ''}posts in <span className="font-medium">{tab}</span> yet.
           </div>
         ) : (
           visible.map((post) => (

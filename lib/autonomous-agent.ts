@@ -5,17 +5,20 @@
  */
 
 import { AGENTS } from './agents';
-import { chat, chatWithUsage } from './llm';
+import { chatWithUsage } from './llm';
 import {
   createPost,
+  createReply,
   listPosts,
   listReplies,
   listListings,
   logAgentActivity,
   incrementAgentDailyPost,
+  incrementAgentDailyReply,
   getAgentDailyCount,
+  getPostReplyStats,
 } from './store';
-import type { AgentPersona, Post } from './types';
+import type { AgentPersona, Post, Reply } from './types';
 
 // ─── Feature flags ────────────────────────────────────────────────────────────
 
@@ -296,4 +299,229 @@ export async function generateAutonomousPost(options: {
   ]);
 
   return { ok: true, post, costUsd };
+}
+
+// ─── Target selector for autonomous replies ────────────────────────────────────
+
+const MAX_AUTO_REPLIES_PER_AGENT_PER_DAY = Number(
+  process.env.MAX_AUTONOMOUS_REPLIES_PER_AGENT_PER_DAY ?? '20'
+);
+const MAX_AGENT_REPLIES_PER_THREAD = Number(
+  process.env.MAX_AGENT_REPLIES_PER_THREAD ?? '6'
+);
+
+async function pickTargetPost(agentId: string, allowAgentPosts: boolean): Promise<Post | null> {
+  const posts = await listPosts(30).catch(() => [] as Post[]);
+  const recent = posts.filter((p) => {
+    const ageHours = (Date.now() - new Date(p.created_at).getTime()) / 3_600_000;
+    return ageHours < 48; // only reply to posts within last 48h
+  });
+
+  // Score each post
+  const scored: { post: Post; score: number }[] = [];
+  for (const post of recent) {
+    // Skip agent-authored posts unless allowAgentPosts
+    if (post.author_kind === 'agent' && !allowAgentPosts) continue;
+
+    const stats = await getPostReplyStats(post.id).catch(() => ({ total: 0, agentCount: 0, autonomousCount: 0 }));
+
+    // Skip if too many autonomous agent replies already
+    if (stats.autonomousCount >= MAX_AGENT_REPLIES_PER_THREAD) continue;
+
+    // Check if this specific agent already replied autonomously to this post
+    const replies = await listReplies(post.id).catch(() => [] as Reply[]);
+    const alreadyReplied = replies.some(
+      (r) => r.author_kind === 'agent' && r.agent_persona === agentId && (r as any).is_autonomous
+    );
+    if (alreadyReplied) continue;
+
+    // Score: human post bonus + low reply bonus + recency
+    const ageHours = (Date.now() - new Date(post.created_at).getTime()) / 3_600_000;
+    const recencyScore = Math.max(0, 1 - ageHours / 48);
+    const humanBonus = post.author_kind === 'human' ? 2 : 0;
+    const lowReplyBonus = stats.total < 3 ? 1.5 : stats.total < 7 ? 0.5 : 0;
+    const domainMatch = AGENTS.find((a) => a.id === agentId)?.topics.some((t) =>
+      post.content.toLowerCase().includes(t)
+    ) ? 1 : 0;
+
+    scored.push({ post, score: recencyScore + humanBonus + lowReplyBonus + domainMatch });
+  }
+
+  if (scored.length === 0) return null;
+  scored.sort((a, b) => b.score - a.score);
+  // Pick from top 3 with some randomness
+  const topN = scored.slice(0, Math.min(3, scored.length));
+  return topN[Math.floor(Math.random() * topN.length)].post;
+}
+
+// ─── Reply prompt builder ─────────────────────────────────────────────────────
+
+function buildReplyPrompt(agent: AgentPersona, targetPost: Post, existingReplies: Reply[]): string {
+  const isAgentPost = targetPost.author_kind === 'agent';
+  const existingSnippet = existingReplies
+    .slice(0, 4)
+    .map((r) => `  ${r.author_name}: "${r.content.slice(0, 100)}"`)
+    .join('\n');
+
+  return `You are ${agent.name}, one of the seven AI agents on AXIO7.
+
+Your role: ${agent.description ?? agent.tagline}
+Your domain: ${agent.topics.slice(0, 8).join(', ')}
+
+You are replying to ${isAgentPost ? 'another AI agent' : 'a human user'}'s post:
+"${targetPost.content.slice(0, 400)}"
+— by ${targetPost.author_name}
+
+${existingSnippet ? `Existing replies in this thread:\n${existingSnippet}\n` : ''}
+Task:
+Write one short reply that adds a concrete new angle, recommendation, question, or insight from your domain.
+
+Rules:
+- You are an AI agent. Never pretend to be human.
+- Do not claim real-life personal experience.
+- Do not repeat points already made in existing replies.
+- Stay in your domain (${agent.tagline}).
+- Be concise: 1-3 sentences.
+- Make it specific — name places, prices, concepts, or ask a sharp question.
+- Output only the reply content. No quotes, no "Reply:", no preamble.`;
+}
+
+// ─── Main reply function ──────────────────────────────────────────────────────
+
+export type AutonomousReplyResult =
+  | { ok: true; reply: Reply; post: Post; costUsd: number }
+  | { ok: false; reason: string; costUsd: number };
+
+export async function generateAutonomousReply(options: {
+  agentId?: string;
+  targetPostId?: string;
+  allowAgentToAgent?: boolean;
+  dryRun?: boolean;
+}): Promise<AutonomousReplyResult> {
+  const autonomousRepliesEnabled =
+    process.env.AGENT_AUTONOMOUS_REPLIES_ENABLED === 'true' ||
+    process.env.AGENT_AUTONOMOUS_ENABLED === 'true';
+
+  if (!autonomousRepliesEnabled && !options.dryRun) {
+    return { ok: false, reason: 'autonomous_disabled', costUsd: 0 };
+  }
+
+  // Pick agent
+  const validAgents = AGENTS.filter((a) => !options.agentId || a.id === options.agentId);
+  if (validAgents.length === 0) return { ok: false, reason: 'agent_not_found', costUsd: 0 };
+
+  // Pick agent with fewest replies today
+  let agent = validAgents[0];
+  if (validAgents.length > 1) {
+    const counts = await Promise.all(
+      validAgents.map(async (a) => ({
+        agent: a,
+        count: (await getAgentDailyCount(a.id)).auto_replies_count,
+      }))
+    );
+    counts.sort((a, b) => a.count - b.count);
+    agent = counts[0].agent;
+  }
+
+  // Daily limit
+  const { auto_replies_count } = await getAgentDailyCount(agent.id);
+  if (auto_replies_count >= MAX_AUTO_REPLIES_PER_AGENT_PER_DAY) {
+    await logAgentActivity({ agent_id: agent.id, action_type: 'autonomous_reply', status: 'rate_limited', error_message: 'daily limit reached' });
+    return { ok: false, reason: 'rate_limited', costUsd: 0 };
+  }
+
+  // Pick target post
+  let targetPost: Post | null = null;
+  if (options.targetPostId) {
+    const posts = await listPosts(50);
+    targetPost = posts.find((p) => p.id === options.targetPostId) ?? null;
+  } else {
+    targetPost = await pickTargetPost(agent.id, options.allowAgentToAgent ?? false);
+  }
+
+  if (!targetPost) {
+    await logAgentActivity({ agent_id: agent.id, action_type: 'autonomous_reply', status: 'skipped', error_message: 'no suitable target post' });
+    return { ok: false, reason: 'no_target_post', costUsd: 0 };
+  }
+
+  // Build prompt
+  const existingReplies = await listReplies(targetPost.id).catch(() => [] as Reply[]);
+  const prompt = buildReplyPrompt(agent, targetPost, existingReplies);
+  const start = Date.now();
+  let content = '';
+  let costUsd = 0;
+
+  try {
+    const result = await chatWithUsage(
+      [{ role: 'user', content: prompt }],
+      { model: agent.model, temperature: 0.85, max_tokens: 200 }
+    );
+    content = result.content.trim().replace(/^["']|["']$/g, '');
+    const tokens = result.usage;
+    if (tokens) {
+      costUsd = ((tokens.prompt_tokens ?? 0) * 0.00000015) + ((tokens.completion_tokens ?? 0) * 0.0000006);
+    }
+  } catch (err: any) {
+    await logAgentActivity({ agent_id: agent.id, action_type: 'autonomous_reply', status: 'failed', target_post_id: targetPost.id, error_message: err?.message, latency_ms: Date.now() - start });
+    return { ok: false, reason: 'llm_error', costUsd: 0 };
+  }
+
+  const latencyMs = Date.now() - start;
+
+  if (!passesQuality(content)) {
+    await logAgentActivity({ agent_id: agent.id, action_type: 'autonomous_reply', status: 'discarded', target_post_id: targetPost.id, generated_content: content, latency_ms: latencyMs, error_message: 'quality check failed' });
+    return { ok: false, reason: 'low_quality', costUsd };
+  }
+
+  if (options.dryRun) {
+    return {
+      ok: true,
+      reply: {
+        id: 'dry-run',
+        post_id: targetPost.id,
+        author_kind: 'agent',
+        author_id: `agent-${agent.id}`,
+        author_name: agent.name,
+        author_avatar: agent.avatar,
+        agent_persona: agent.id,
+        content,
+        created_at: new Date().toISOString(),
+        confidence_score: 0.8,
+        visibility: 'public',
+        up_count: 0,
+        down_count: 0,
+      } as Reply,
+      post: targetPost,
+      costUsd,
+    };
+  }
+
+  // Save reply with is_autonomous flag (stored in extra col via DB, passed as any for now)
+  const reply = await createReply({
+    post_id: targetPost.id,
+    author_kind: 'agent',
+    author_name: agent.name,
+    author_avatar: agent.avatar,
+    agent_persona: agent.id,
+    content,
+    confidence_score: 0.8,
+    visibility: 'public',
+  });
+
+  await Promise.all([
+    logAgentActivity({
+      agent_id: agent.id,
+      action_type: targetPost.author_kind === 'agent' ? 'agent_to_agent_reply' : 'autonomous_reply',
+      status: 'success',
+      target_post_id: targetPost.id,
+      created_reply_id: reply.id,
+      model: agent.model,
+      generated_content: content,
+      estimated_cost: costUsd,
+      latency_ms: latencyMs,
+    }),
+    incrementAgentDailyReply(agent.id, costUsd),
+  ]);
+
+  return { ok: true, reply, post: targetPost, costUsd };
 }
