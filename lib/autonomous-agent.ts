@@ -107,6 +107,67 @@ async function buildTradeContext(): Promise<string> {
   );
 }
 
+async function buildDetailedFeedContext(windowHours = 6): Promise<string> {
+  const posts = await listPosts(30).catch(() => [] as Post[]);
+  const cutoff = Date.now() - windowHours * 3_600_000;
+  const recent = posts.filter((p) => new Date(p.created_at).getTime() > cutoff);
+  if (recent.length === 0) return 'No posts in this time window.';
+
+  const humanPosts = recent.filter((p) => p.author_kind !== 'agent');
+  const agentPosts = recent.filter((p) => p.author_kind === 'agent');
+
+  const lines: string[] = [];
+  if (humanPosts.length > 0) {
+    lines.push('Human posts:');
+    humanPosts.slice(0, 6).forEach((p) => lines.push(`  - ${p.author_name}: "${p.content.slice(0, 100)}"`));
+  }
+  if (agentPosts.length > 0) {
+    lines.push('Agent posts:');
+    agentPosts.slice(0, 4).forEach((p) => lines.push(`  - ${p.author_name} (agent): "${p.content.slice(0, 100)}"`));
+  }
+  return lines.join('\n') || 'No recent activity.';
+}
+
+function buildSummaryPrompt(agent: AgentPersona, feedCtx: string, windowHours: number): string {
+  return `You are ${agent.name}, one of the seven AI agents on AXIO7.
+
+AXIO7 is a social network for Columbia students and NYC locals.
+
+Activity on AXIO7 in the last ${windowHours} hours:
+${feedCtx}
+
+Task:
+Write one short feed summary post. Mention 2-3 concrete topics that humans and agents have been discussing. End with one specific question to invite humans to join.
+
+Rules:
+- Be transparent that this is an AI-generated summary.
+- Do not overstate or invent activity.
+- Keep it concise: 2-4 sentences.
+- Do not say "I personally..." — you are an AI.
+- Output only the post content.`;
+}
+
+function buildTradeContextPrompt(agent: AgentPersona, tradeCtx: string, feedCtx: string): string {
+  return `You are ${agent.name}, one of the seven AI agents on AXIO7. Your specialty: ${agent.description ?? agent.tagline}.
+
+Current listings on AXIO7 Trade:
+${tradeCtx}
+
+Recent feed context:
+${feedCtx}
+
+Task:
+Write one short post giving useful context or analysis about the current trade listings. Focus on what would help a buyer or seller make a better decision.
+
+Rules:
+- You are an AI agent. Be transparent about that.
+- Do not claim to have personally bought, sold, or visited anything.
+- Do not guarantee prices or outcomes.
+- Give one concrete, specific insight (pricing trend, pickup logistics, neighborhood context, etc.).
+- Keep it 1-3 sentences.
+- Output only the post content.`;
+}
+
 // ─── Prompt builder ───────────────────────────────────────────────────────────
 
 function buildPostPrompt(agent: AgentPersona, feedCtx: string, tradeCtx: string): string {
@@ -142,7 +203,7 @@ export type AutonomousPostResult =
 
 export async function generateAutonomousPost(options: {
   agentId?: string;
-  contextType?: 'feed' | 'trade' | 'auto';
+  contextType?: 'feed' | 'trade' | 'summary' | 'auto';
   dryRun?: boolean;
 }): Promise<AutonomousPostResult> {
   if (!isAutonomousEnabled() && !options.dryRun) {
@@ -181,18 +242,30 @@ export async function generateAutonomousPost(options: {
     return { ok: false, reason: 'rate_limited', costUsd: 0 };
   }
 
-  // Build context
+  // Build context + prompt based on contextType
   const contextType = options.contextType ?? 'auto';
   const useTradeCtx =
     contextType === 'trade' ||
     (contextType === 'auto' && ['mercer', 'atlas'].includes(agent.id));
 
   const [feedCtx, tradeCtx] = await Promise.all([
-    buildFeedContext(),
+    contextType === 'summary' ? buildDetailedFeedContext(6) : buildFeedContext(),
     useTradeCtx ? buildTradeContext() : Promise.resolve(''),
   ]);
 
-  const prompt = buildPostPrompt(agent, feedCtx, tradeCtx);
+  const autonomousSource: string =
+    contextType === 'summary' ? 'feed_summary' :
+    contextType === 'trade' ? 'trade_context' :
+    'scheduled_post';
+
+  let prompt: string;
+  if (contextType === 'summary') {
+    prompt = buildSummaryPrompt(agent, feedCtx, 6);
+  } else if (contextType === 'trade' && tradeCtx) {
+    prompt = buildTradeContextPrompt(agent, tradeCtx, feedCtx);
+  } else {
+    prompt = buildPostPrompt(agent, feedCtx, tradeCtx);
+  }
   const start = Date.now();
 
   let content = '';
@@ -264,7 +337,7 @@ export async function generateAutonomousPost(options: {
         author_kind: 'agent',
         agent_persona: agent.id,
         is_autonomous: true,
-        autonomous_source: 'manual_trigger',
+        autonomous_source: autonomousSource as any,
       },
       costUsd,
     };
@@ -280,14 +353,15 @@ export async function generateAutonomousPost(options: {
     author_kind: 'agent',
     agent_persona: agent.id,
     is_autonomous: true,
-    autonomous_source: 'manual_trigger',
+    autonomous_source: autonomousSource,
   });
 
   // Log + counter
   await Promise.all([
     logAgentActivity({
       agent_id: agent.id,
-      action_type: 'autonomous_post',
+      action_type: contextType === 'summary' ? 'feed_summary' :
+                   contextType === 'trade' ? 'trade_context_post' : 'autonomous_post',
       status: 'success',
       created_post_id: post.id,
       model: agent.model,
@@ -299,6 +373,18 @@ export async function generateAutonomousPost(options: {
   ]);
 
   return { ok: true, post, costUsd };
+}
+
+// Convenience wrapper for feed summary
+export async function generateFeedSummary(options: { agentId?: string; dryRun?: boolean } = {}): Promise<AutonomousPostResult> {
+  // Prefer nova (GPT) for summaries as it's good at synthesis
+  return generateAutonomousPost({ agentId: options.agentId ?? 'nova', contextType: 'summary', dryRun: options.dryRun });
+}
+
+// Convenience wrapper for trade context post
+export async function generateTradeContextPost(options: { agentId?: string; dryRun?: boolean } = {}): Promise<AutonomousPostResult> {
+  // Prefer mercer (Grok) for trade analysis
+  return generateAutonomousPost({ agentId: options.agentId ?? 'mercer', contextType: 'trade', dryRun: options.dryRun });
 }
 
 // ─── Target selector for autonomous replies ────────────────────────────────────

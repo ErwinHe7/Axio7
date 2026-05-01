@@ -36,6 +36,8 @@ export function AgentAdminPanel({
   const [results, setResults] = useState<Record<string, TriggerResult>>({});
   const [globalPostLoading, setGlobalPostLoading] = useState(false);
   const [globalReplyLoading, setGlobalReplyLoading] = useState(false);
+  const [globalSummaryLoading, setGlobalSummaryLoading] = useState(false);
+  const [globalTradeLoading, setGlobalTradeLoading] = useState(false);
   const [globalResult, setGlobalResult] = useState<{ type: string; data: TriggerResult } | null>(null);
 
   async function triggerPost(agentId: string, dryRun = false) {
@@ -72,16 +74,21 @@ export function AgentAdminPanel({
     }
   }
 
-  async function triggerGlobal(type: 'post' | 'reply', dryRun = false) {
+  async function triggerGlobal(type: 'post' | 'reply' | 'summary' | 'trade', dryRun = false) {
     if (type === 'post') setGlobalPostLoading(true);
-    else setGlobalReplyLoading(true);
+    else if (type === 'reply') setGlobalReplyLoading(true);
+    else if (type === 'summary') setGlobalSummaryLoading(true);
+    else setGlobalTradeLoading(true);
     setGlobalResult(null);
     try {
-      const endpoint = type === 'post' ? '/api/agents/autonomous/post' : '/api/agents/autonomous/reply';
+      const endpoint = type === 'reply' ? '/api/agents/autonomous/reply' : '/api/agents/autonomous/post';
+      const body: Record<string, unknown> = { dryRun };
+      if (type === 'summary') body.contextType = 'summary';
+      if (type === 'trade') body.contextType = 'trade';
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dryRun }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       setGlobalResult({ type, data });
@@ -90,6 +97,8 @@ export function AgentAdminPanel({
     } finally {
       setGlobalPostLoading(false);
       setGlobalReplyLoading(false);
+      setGlobalSummaryLoading(false);
+      setGlobalTradeLoading(false);
     }
   }
 
@@ -127,6 +136,32 @@ export function AgentAdminPanel({
               </button>
               <button onClick={() => triggerGlobal('reply', false)} disabled={globalReplyLoading || !autonomousEnabled} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50" style={{ background: '#2563eb' }}>
                 {globalReplyLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />} Reply now
+              </button>
+            </div>
+          </div>
+
+          {/* Summary group */}
+          <div className="space-y-1">
+            <div className="text-[11px] font-medium" style={{ color: 'var(--lt-muted)' }}>Feed Summary</div>
+            <div className="flex gap-2">
+              <button onClick={() => triggerGlobal('summary', true)} disabled={globalSummaryLoading} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium transition hover:opacity-80 disabled:opacity-50" style={{ background: 'rgba(0,0,0,0.06)', color: 'var(--lt-text)' }}>
+                {globalSummaryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />} Dry run
+              </button>
+              <button onClick={() => triggerGlobal('summary', false)} disabled={globalSummaryLoading || !autonomousEnabled} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50" style={{ background: '#7c3aed' }}>
+                {globalSummaryLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '📋'} Summarize
+              </button>
+            </div>
+          </div>
+
+          {/* Trade context group */}
+          <div className="space-y-1">
+            <div className="text-[11px] font-medium" style={{ color: 'var(--lt-muted)' }}>Trade Context</div>
+            <div className="flex gap-2">
+              <button onClick={() => triggerGlobal('trade', true)} disabled={globalTradeLoading} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium transition hover:opacity-80 disabled:opacity-50" style={{ background: 'rgba(0,0,0,0.06)', color: 'var(--lt-text)' }}>
+                {globalTradeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />} Dry run
+              </button>
+              <button onClick={() => triggerGlobal('trade', false)} disabled={globalTradeLoading || !autonomousEnabled} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50" style={{ background: '#d97706' }}>
+                {globalTradeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : '🛒'} Trade post
               </button>
             </div>
           </div>

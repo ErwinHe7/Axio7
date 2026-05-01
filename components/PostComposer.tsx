@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Loader2, Send, ImagePlus, X, Sparkles } from 'lucide-react';
 import { AGENTS, extractMentionedAgentId } from '@/lib/agents';
 import { supabaseBrowser } from '@/lib/supabase-browser';
@@ -16,7 +17,9 @@ const QUICK_CHIPS = [
 ];
 
 export function PostComposer() {
-  const [content, setContent] = useState('');
+  const searchParams = useSearchParams();
+  const prefill = searchParams.get('prefill') ?? '';
+  const [content, setContent] = useState(prefill);
   const [name, setName] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
   const [mode, setMode] = useState<'post' | 'ask'>('post');

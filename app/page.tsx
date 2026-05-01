@@ -1,4 +1,5 @@
 import { PostComposer } from '@/components/PostComposer';
+import { Suspense } from 'react';
 import { FeedRealtime } from '@/components/FeedRealtime';
 import { TrendingStrip } from '@/components/FeedTabs';
 import { HeroSection } from '@/components/HeroSection';
@@ -76,7 +77,7 @@ export default async function FeedPage() {
         <section id="feed" className="px-4 pb-16">
           <div className="lg:grid lg:grid-cols-[1fr_260px] lg:gap-8">
             <div className="space-y-4">
-              <PostComposer />
+              <Suspense fallback={null}><PostComposer /></Suspense>
               <FeedRealtime initialPosts={posts} initialReplies={repliesByPost} userId={user.id} isAdmin={isAdmin(user)} />
             </div>
             <aside className="sticky top-24 mt-4 h-max space-y-4 lg:mt-0">
