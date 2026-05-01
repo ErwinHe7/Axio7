@@ -1,14 +1,15 @@
 import Link from 'next/link';
-import { Home, ShoppingBag, User, LogIn, LogOut, MessageSquare } from 'lucide-react';
-import { getCurrentUser } from '@/lib/auth';
+import { Home, ShoppingBag, User, LogIn, LogOut, MessageSquare, Settings } from 'lucide-react';
+import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { getUnreadMessageCount } from '@/lib/store';
 import { BellButton } from './BellButton';
 
 export async function Nav() {
   const user = await getCurrentUser();
-  const unreadMessages = user.authenticated
-    ? await getUnreadMessageCount(user.id).catch(() => 0)
-    : 0;
+  const [unreadMessages, admin] = await Promise.all([
+    user.authenticated ? getUnreadMessageCount(user.id).catch(() => 0) : Promise.resolve(0),
+    Promise.resolve(isAdmin(user)),
+  ]);
 
   return (
     <header
@@ -51,6 +52,22 @@ export async function Nav() {
           </Link>
 
           <NavLink href="/profile" icon={<User className="h-4 w-4" />} label="Profile" />
+
+          {/* Admin link — only visible to site owner */}
+          {admin && (
+            <Link
+              href="/admin/agents"
+              className="nav-item group relative inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs transition-colors"
+              title="Admin"
+            >
+              <Settings className="h-4 w-4" />
+              <span className="hidden sm:inline">Admin</span>
+              <span
+                className="absolute bottom-0.5 left-1/2 h-px w-4/5 origin-center -translate-x-1/2 scale-x-0 transition-transform duration-200 group-hover:scale-x-100"
+                style={{ background: 'var(--molt-shell)' }}
+              />
+            </Link>
+          )}
 
           <BellButton authenticated={user.authenticated} />
 

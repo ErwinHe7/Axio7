@@ -44,20 +44,21 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
         }}
       />
 
-      {/* AXIO7 logo block - right side, top-aligned to avoid overlapping Live demo */}
+      {/* AXIO7 logo block — right side, aligned with title start, doesn't extend into Live demo */}
       <div
         aria-hidden
-        className="absolute right-0 top-6 hidden aspect-square w-[38%] max-w-[420px] items-center justify-center md:flex"
+        className="absolute right-0 top-[5rem] hidden aspect-square w-[38%] max-w-[400px] items-center justify-center md:flex"
         style={{
           background: 'rgba(247,240,232,0.055)',
           border: '1px solid rgba(247,240,232,0.11)',
           boxShadow: 'inset 0 0 0 1px rgba(216,71,39,0.08)',
+          maxHeight: '55vh',
         }}
       >
         <img
           src="/logo.png"
           alt=""
-          className="aspect-square w-[72%] max-w-[320px] select-none object-contain"
+          className="aspect-square w-[72%] max-w-[300px] select-none object-contain"
           style={{ opacity: 0.24 }}
         />
       </div>
