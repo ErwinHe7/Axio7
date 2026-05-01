@@ -274,8 +274,35 @@ export function PostCard({ post, replies, canDelete, canPin }: { post: Post; rep
           }}
         >
           <Sparkles className="h-3.5 w-3.5" style={{ color: 'var(--molt-shell)' }} />
-          <span>{agentReplies.length} {agentReplies.length === 1 ? 'reply' : 'replies'} from AI models</span>
-          <span className="ml-auto text-[11px] opacity-50">{showAgentReplies ? '▲ collapse' : '▼ expand'}</span>
+          {agentReplies.length === 1 ? (
+            // Single-mode: show that one agent's avatar + "answered by X"
+            (() => {
+              const sole = agentReplies[0];
+              const soleAgent = AGENTS.find((a) => a.id === sole.agent_persona);
+              return (
+                <span className="flex items-center gap-1.5">
+                  {soleAgent && (
+                    <img src={soleAgent.avatar} alt={soleAgent.name} className="h-5 w-5 rounded-full ring-1 ring-white" />
+                  )}
+                  <span>AI answer · {soleAgent?.name ?? 'Agent'}</span>
+                </span>
+              );
+            })()
+          ) : (
+            // Panel-mode: show avatar stack + count
+            <span className="flex items-center gap-1.5">
+              <span className="flex -space-x-1.5">
+                {agentReplies.slice(0, 5).map((r) => {
+                  const a = AGENTS.find((ag) => ag.id === r.agent_persona);
+                  return a ? (
+                    <img key={r.id} src={a.avatar} alt={a.name} className="h-5 w-5 rounded-full ring-1 ring-white" />
+                  ) : null;
+                })}
+              </span>
+              <span>{agentReplies.length} AI perspectives</span>
+            </span>
+          )}
+          <span className="ml-auto text-[11px] opacity-50">{showAgentReplies ? '▲' : '▼'}</span>
         </button>
       )}
 

@@ -31,6 +31,12 @@ export function FeedRealtime({
   const [newPostIds, setNewPostIds] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<FeedTab>('all');
   const [source, setSource] = useState<FeedSource>('all');
+  // Show sticky prompt for new users who just dismissed the onboarding modal
+  const [showFirstPostPrompt, setShowFirstPostPrompt] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try { return localStorage.getItem('axio7_onboarded_v1') === '1' && !localStorage.getItem('axio7_first_post_done'); }
+    catch { return false; }
+  });
   const channelRef = useRef<ReturnType<ReturnType<typeof import('../lib/supabase-browser').supabaseBrowser>['channel']> | null>(null);
 
   useEffect(() => {
@@ -111,6 +117,9 @@ export function FeedRealtime({
         setTimeout(() => setNewPostIds((s) => { const next = new Set(s); next.delete(post.id); return next; }), 700);
         return [post, ...prev];
       });
+      // Mark first post done, hide prompt
+      try { localStorage.setItem('axio7_first_post_done', '1'); } catch { /* ignore */ }
+      setShowFirstPostPrompt(false);
     }
     window.addEventListener('axio7:new-post', handleNewPost);
     return () => window.removeEventListener('axio7:new-post', handleNewPost);
@@ -129,6 +138,28 @@ export function FeedRealtime({
       <div className="mt-2 px-0.5">
         <SourceFilter value={source} onChange={setSource} />
       </div>
+
+      {/* Post-onboarding sticky prompt for new users */}
+      {showFirstPostPrompt && (
+        <div
+          className="mt-3 flex items-center justify-between gap-3 rounded-[18px] px-4 py-3"
+          style={{ background: 'rgba(216,71,39,0.07)', border: '1px solid rgba(216,71,39,0.2)' }}
+        >
+          <p className="text-sm font-medium" style={{ color: 'var(--molt-shell)' }}>
+            🚀 Post your first question — get 7 AI perspectives in ~30s
+          </p>
+          <button
+            onClick={() => {
+              try { localStorage.setItem('axio7_first_post_done', '1'); } catch { /* ignore */ }
+              setShowFirstPostPrompt(false);
+            }}
+            className="flex-shrink-0 text-[11px] opacity-50 hover:opacity-80 transition"
+            style={{ color: 'var(--lt-muted)' }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <div className="mt-4 space-y-4">
         {visible.length === 0 ? (
