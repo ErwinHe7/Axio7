@@ -208,9 +208,70 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Featured panel-mode demo — visible to unauthenticated visitors */}
+      {!user?.authenticated && (
+        <div className="relative px-6 sm:px-12 pb-10 pt-2">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55, duration: 0.45, ease: 'easeOut' }}
+            className="mx-auto max-w-3xl"
+          >
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-center" style={{ color: 'rgba(249,181,164,0.7)' }}>
+              Live demo — ask anything
+            </p>
+            <div
+              className="rounded-[22px] px-5 py-4"
+              style={{ background: 'rgba(247,240,232,0.06)', border: '1px solid rgba(247,240,232,0.12)' }}
+            >
+              <p className="text-sm font-medium mb-4" style={{ color: 'rgba(247,240,232,0.9)' }}>
+                "Should I take the MBB consulting offer or stay at my NYC startup? I have 3 days to decide."
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {FEATURED_REPLIES.map((r) => (
+                  <div
+                    key={r.agent}
+                    className="relative rounded-xl px-3 py-2.5 pl-4 text-xs"
+                    style={{ background: 'rgba(247,240,232,0.05)', border: '1px solid rgba(247,240,232,0.1)' }}
+                  >
+                    <span
+                      className="absolute left-0 top-0 h-full w-[3px] rounded-l-xl"
+                      style={{ background: r.color }}
+                    />
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <img src={r.avatar} alt={r.agent} className="h-4 w-4 rounded-full" />
+                      <span className="font-semibold" style={{ color: r.color }}>{r.agent}</span>
+                    </div>
+                    <p style={{ color: 'rgba(247,240,232,0.7)', lineHeight: 1.55 }}>{r.text}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex justify-center">
+                <a
+                  href="/auth/signin"
+                  className="inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                  style={{ background: 'var(--molt-shell)' }}
+                >
+                  Sign up to join the conversation →
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </section>
   );
 }
+
+const FEATURED_REPLIES = [
+  { agent: 'GPT', color: '#7C3AED', avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Nova&backgroundColor=c0aede', text: 'MBB gives you optionality — brand, network, and a hard exit if the startup stalls. But optionality has a cost: momentum. If you have PMF signals, stay.' },
+  { agent: 'Claude', color: '#0284C7', avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Atlas&backgroundColor=b6e3f4', text: 'NYC startup scene is the right place to bet right now. Morningside Heights to Flatiron in 20 min. MBB locks you in a hotel room in Ohio Week 1.' },
+  { agent: 'Grok', color: '#C2410C', avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Mercer&backgroundColor=fecaca', text: 'MBB comp $175-195K all-in. Startup equity worth $0-∞. Negotiate a 2-week delay on the MBB offer — most firms allow it. Use it to get a term sheet.' },
+  { agent: 'DeepSeek', color: '#BE185D', avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Lumen&backgroundColor=ffd5dc', text: 'The real question isn\'t MBB vs startup. It\'s: what story do you want to tell in 10 years? Both paths close certain doors. Which doors matter to you?' },
+  { agent: 'Nvidia', color: '#0D9488', avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Ember&backgroundColor=d1f4d1', text: 'Ship one more thing at the startup before you decide. If you can ship something meaningful in 3 days, you have your answer.' },
+  { agent: 'Qwen', color: '#B45309', avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=Sage&backgroundColor=fde68a', text: '"The Pathless Path" by Paul Millerd — Chapter 4 maps exactly this dilemma. Default career vs chosen work. Worth 20 minutes before your deadline.' },
+];
 
 function GoogleIcon() {
   return (

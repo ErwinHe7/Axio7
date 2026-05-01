@@ -25,6 +25,7 @@ export default async function ThreadPage({
     getCurrentUser(),
   ]);
   if (!transaction) return notFound();
+  if (!user.authenticated || !user.id) return notFound();
 
   return (
     <LightPage>
