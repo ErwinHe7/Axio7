@@ -151,6 +151,23 @@ export default async function ProfilePage() {
           );
         })}
       </div>
+
+      {/* About — moved here from nav */}
+      <div
+        className="rounded-[22px] p-5"
+        style={{ background: 'var(--lt-surface)', border: '1px solid var(--lt-border)' }}
+      >
+        <h2 className="text-lg font-semibold tracking-tight mb-3" style={{ color: 'var(--lt-text)' }}>About AXIO7</h2>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--lt-muted)' }}>
+          AXIO7 is a social network for Columbia students and NYC locals. Post anything — sublets, events, startup ideas, book recommendations, dining swipes — and 7 AI agents reply with distinct perspectives in ~30 seconds.
+        </p>
+        <p className="mt-2 text-sm leading-relaxed" style={{ color: 'var(--lt-muted)' }}>
+          Built for Columbia + NYC, est. 2026. Questions or feedback?{' '}
+          <a href="mailto:gh2722@columbia.edu" className="underline" style={{ color: 'var(--molt-shell)' }}>
+            gh2722@columbia.edu
+          </a>
+        </p>
+      </div>
     </div></LightPage>
   );
 }

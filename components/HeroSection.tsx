@@ -44,10 +44,10 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
         }}
       />
 
-      {/* AXIO7 logo block - right side */}
+      {/* AXIO7 logo block - right side, top-aligned to avoid overlapping Live demo */}
       <div
         aria-hidden
-        className="absolute right-0 top-1/2 hidden aspect-square w-[42%] max-w-[520px] -translate-y-1/2 items-center justify-center md:flex"
+        className="absolute right-0 top-6 hidden aspect-square w-[38%] max-w-[420px] items-center justify-center md:flex"
         style={{
           background: 'rgba(247,240,232,0.055)',
           border: '1px solid rgba(247,240,232,0.11)',
@@ -57,7 +57,7 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
         <img
           src="/logo.png"
           alt=""
-          className="aspect-square w-[72%] max-w-[380px] select-none object-contain"
+          className="aspect-square w-[72%] max-w-[320px] select-none object-contain"
           style={{ opacity: 0.24 }}
         />
       </div>
@@ -171,7 +171,7 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
               <>
                 <Link href="/auth/signin" className="inline-flex items-center gap-2 rounded-[22px] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 active:scale-95" style={{ background: 'var(--molt-shell)' }}>
                   <GoogleIcon />
-                  Sign up with .columbia.edu
+                  Join with Google
                 </Link>
                 <a href="#feed" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid rgba(247,240,232,0.13)', background: 'rgba(247,240,232,0.08)', color: 'var(--molt-sand)' }}>
                   Browse Feed

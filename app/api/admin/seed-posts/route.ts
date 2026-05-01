@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isSupabaseConfigured, supabaseAdmin } from '@/lib/supabase';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
+import { fanOutAgentReplies } from '@/lib/agent-fanout';
 
 export const runtime = 'nodejs';
-export const maxDuration = 60;
+export const maxDuration = 120;
 
-// 20 natural Columbia/NYC seed posts — used to fill up to target_count
+// Random anonymous usernames — no real identity
+const ANON_NAMES = [
+  'AXIO@A10042', 'AXIO@B22891', 'AXIO@C33107', 'AXIO@D41256',
+  'AXIO@E50334', 'AXIO@F61820', 'AXIO@G72491', 'AXIO@H83056',
+  'AXIO@J94102', 'AXIO@K05237', 'AXIO@L16843', 'AXIO@M27509',
+  'AXIO@N38621', 'AXIO@P49037', 'AXIO@Q50182', 'AXIO@R61470',
+  'AXIO@S72038', 'AXIO@T83196', 'AXIO@U94427', 'AXIO@V05881',
+];
+
+// 20 natural Columbia/NYC seed posts
 const SEED_POOL = [
   "Just moved to Morningside Heights for my Columbia MSCS. Rent is wild — any tips on finding a no-broker-fee sublet for the summer? I'm looking for June–August, ideally within 10 min walk of campus.",
   "What's the most underrated thing to do in NYC as a student that most people don't find until their last semester? Not tourist stuff — things locals actually do.",
@@ -40,9 +50,8 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   const dryRun = body.dry_run === true;
+  const triggerFanout = body.trigger_fanout !== false; // default true
   const targetCount: number = typeof body.target_count === 'number' ? body.target_count : 29;
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://axio7.com').replace(/\/$/, '');
-  const authorAvatar = user.avatar ?? `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(user.name ?? 'ErwinHe')}`;
 
   // Count existing posts
   const { count: currentCount, error: countErr } = await supabaseAdmin()
@@ -68,7 +77,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Fetch existing post content to avoid duplicates
+  // Fetch existing content to avoid duplicates
   const { data: existingPosts } = await supabaseAdmin()
     .from('posts')
     .select('content')
@@ -76,8 +85,6 @@ export async function POST(req: NextRequest) {
     .limit(100);
 
   const existingContent = new Set((existingPosts ?? []).map((p: { content: string }) => p.content.trim()));
-
-  // Pick seed posts not already in DB
   const candidates = SEED_POOL.filter((c) => !existingContent.has(c.trim()));
   const toInsert = candidates.slice(0, needed);
 
@@ -87,22 +94,38 @@ export async function POST(req: NextRequest) {
       target_count: targetCount,
       needed,
       inserted: 0,
-      note: 'All seed posts already exist in DB — no duplicates inserted',
+      note: 'All seed posts already exist — no duplicates inserted.',
     });
   }
 
-  const results: { id: string; content_preview: string; fanout: string }[] = [];
+  const results: { id: string; content_preview: string; author: string; fanout: string }[] = [];
   const errors: string[] = [];
 
-  for (const content of toInsert) {
+  // Spread timestamps over the past 7 days so feed looks natural
+  const now = Date.now();
+  const spread = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
+
+  for (let i = 0; i < toInsert.length; i++) {
+    const content = toInsert[i];
+    // Pick a random anon name
+    const authorName = ANON_NAMES[Math.floor(Math.random() * ANON_NAMES.length)];
+    const authorId = `seed-${Math.random().toString(36).slice(2, 10)}`;
+    const avatarSeed = encodeURIComponent(authorName);
+    const authorAvatar = `https://api.dicebear.com/9.x/thumbs/svg?seed=${avatarSeed}`;
+
+    // Random timestamp in the past 7 days
+    const ageMs = Math.floor(Math.random() * spread);
+    const createdAt = new Date(now - ageMs).toISOString();
+
     const { data: post, error } = await supabaseAdmin()
       .from('posts')
       .insert({
-        author_id: user.id,
-        author_name: user.name ?? 'Erwin He',
+        author_id: authorId,
+        author_name: authorName,
         author_avatar: authorAvatar,
         content,
         images: [],
+        created_at: createdAt,
       })
       .select('id')
       .single();
@@ -112,21 +135,21 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
-    // Fire-and-forget fanout — failure must not block post insertion
+    // Fire agent fanout directly via internal function (no HTTP)
     let fanoutStatus = 'skipped';
-    try {
-      const fr = await fetch(`${siteUrl}/api/fanout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ post_id: post.id }),
-      });
-      fanoutStatus = fr.ok ? 'triggered' : `http_${fr.status}`;
-    } catch {
-      fanoutStatus = 'fetch_error';
+    if (triggerFanout) {
+      try {
+        await fanOutAgentReplies(post.id);
+        fanoutStatus = 'triggered';
+      } catch (err: any) {
+        fanoutStatus = `error: ${err?.message ?? String(err)}`;
+      }
     }
 
-    results.push({ id: post.id, content_preview: content.slice(0, 60), fanout: fanoutStatus });
-    await new Promise((r) => setTimeout(r, 200));
+    results.push({ id: post.id, content_preview: content.slice(0, 60), author: authorName, fanout: fanoutStatus });
+
+    // Small pause to avoid hammering LLM APIs
+    if (triggerFanout) await new Promise((r) => setTimeout(r, 500));
   }
 
   return NextResponse.json({

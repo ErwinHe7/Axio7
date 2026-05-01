@@ -31,12 +31,15 @@ export function FeedRealtime({
   const [newPostIds, setNewPostIds] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<FeedTab>('all');
   const [source, setSource] = useState<FeedSource>('all');
-  // Show sticky prompt for new users who just dismissed the onboarding modal
-  const [showFirstPostPrompt, setShowFirstPostPrompt] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    try { return localStorage.getItem('axio7_onboarded_v1') === '1' && !localStorage.getItem('axio7_first_post_done'); }
-    catch { return false; }
-  });
+  // Show sticky prompt for new users — always false on server to avoid hydration mismatch
+  const [showFirstPostPrompt, setShowFirstPostPrompt] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('axio7_onboarded_v1') === '1' && !localStorage.getItem('axio7_first_post_done')) {
+        setShowFirstPostPrompt(true);
+      }
+    } catch { /* ignore */ }
+  }, []);
   const channelRef = useRef<ReturnType<ReturnType<typeof import('../lib/supabase-browser').supabaseBrowser>['channel']> | null>(null);
 
   useEffect(() => {
