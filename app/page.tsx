@@ -3,7 +3,8 @@ import { FeedRealtime } from '@/components/FeedRealtime';
 import { TrendingStrip } from '@/components/FeedTabs';
 import { HeroSection } from '@/components/HeroSection';
 import { StatsBar } from '@/components/StatsBar';
-import { listPosts, listReplies, listListings } from '@/lib/store';
+import { ParticleDust } from '@/components/ParticleDust';
+import { listPosts, listReplies } from '@/lib/store';
 import { AGENTS } from '@/lib/agents';
 import { isSupabaseConfigured, supabaseAdmin } from '@/lib/supabase';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
@@ -54,54 +55,50 @@ export default async function FeedPage() {
   repliesByPost = feedResult.repliesByPost;
 
   return (
-    <div className="page-light-home">
-      {/* Dark hero block */}
-      <div className="hero-dark -mx-4 px-4">
+    <div className="page-light relative" style={{ background: 'var(--lt-bg)' }}>
+      <ParticleDust />
+      <div className="relative z-10">
+        {/* Hero — now on gold background */}
         <HeroSection lastPostTime={posts[0]?.created_at} user={user} />
 
-        {/* Stats bar between hero and feed */}
-        <section className="pt-6 pb-8">
+        {/* Stats bar */}
+        <section className="px-4 pt-4 pb-6">
           <StatsBar
             postCount={stats.postCount}
             replyCount={stats.replyCount}
             listingCount={stats.listingCount}
           />
         </section>
-      </div>
 
-      {/* Feed — light gold section */}
-      <section
-        id="feed"
-        className="relative -mx-4 px-4 pt-8 pb-16"
-        style={{ background: 'var(--lt-bg)', color: 'var(--lt-text)' }}
-      >
-        <div className="relative z-10 lg:grid lg:grid-cols-[1fr_260px] lg:gap-8">
-          <div className="space-y-4">
-            <PostComposer />
-            <FeedRealtime initialPosts={posts} initialReplies={repliesByPost} userId={user.id} isAdmin={isAdmin(user)} />
-          </div>
-          <aside className="sticky top-24 mt-4 h-max space-y-4 lg:mt-0">
-            <TrendingStrip />
-            {/* Models sidebar */}
-            <div className="hidden rounded-[22px] p-4 lg:block" style={{ border: '1px solid var(--lt-border)', background: 'var(--lt-surface)' }}>
-              <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--lt-subtle)' }}>
-                models
-              </div>
-              <ul className="mt-3 space-y-2.5">
-                {AGENTS.map((a) => (
-                  <li key={a.id} className="flex items-center gap-2.5">
-                    <img src={a.avatar} alt={a.name} className="h-7 w-7 rounded-full ring-1 ring-black/5" />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-semibold" style={{ color: 'var(--lt-text)' }}>{a.name}</div>
-                      <div className="text-[11px]" style={{ color: 'var(--lt-subtle)' }}>{a.tagline}</div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+        {/* Feed */}
+        <section id="feed" className="px-4 pb-16">
+          <div className="lg:grid lg:grid-cols-[1fr_260px] lg:gap-8">
+            <div className="space-y-4">
+              <PostComposer />
+              <FeedRealtime initialPosts={posts} initialReplies={repliesByPost} userId={user.id} isAdmin={isAdmin(user)} />
             </div>
-          </aside>
-        </div>
-      </section>
+            <aside className="sticky top-24 mt-4 h-max space-y-4 lg:mt-0">
+              <TrendingStrip />
+              <div className="hidden rounded-[22px] p-4 lg:block" style={{ border: '1px solid var(--lt-border)', background: 'var(--lt-surface)' }}>
+                <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--lt-subtle)' }}>
+                  models
+                </div>
+                <ul className="mt-3 space-y-2.5">
+                  {AGENTS.map((a) => (
+                    <li key={a.id} className="flex items-center gap-2.5">
+                      <img src={a.avatar} alt={a.name} className="h-7 w-7 rounded-full ring-1 ring-black/5" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[13px] font-semibold" style={{ color: 'var(--lt-text)' }}>{a.name}</div>
+                        <div className="text-[11px]" style={{ color: 'var(--lt-subtle)' }}>{a.tagline}</div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }
