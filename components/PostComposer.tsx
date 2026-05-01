@@ -23,6 +23,7 @@ export function PostComposer() {
   const [name, setName] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
   const [mode, setMode] = useState<'post' | 'ask'>('post');
+  const [postError, setPostError] = useState<string | null>(null);
 
   // Pre-fill name from Supabase session if signed in
   useEffect(() => {
@@ -104,17 +105,21 @@ export function PostComposer() {
     }
 
     setSubmitting(true);
+    setPostError(null);
     try {
       const res = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          author_name: name.trim() || undefined, // let server use session name
+          author_name: name.trim() || undefined,
           content: content.trim(),
           images: images.map((i) => i.url),
         }),
       });
-      if (!res.ok) throw new Error('post failed');
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? `Post failed (${res.status})`);
+      }
       const { post } = await res.json();
       trackPostCreated({
         user_id: userId ?? post.author_id,
@@ -131,6 +136,8 @@ export function PostComposer() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ post_id: post.id, ...(mentionedAgentId ? { mention: mentionedAgentId } : {}) }),
       }).catch(() => {});
+    } catch (err: any) {
+      setPostError(err?.message ?? 'Failed to post. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -287,6 +294,12 @@ export function PostComposer() {
               </span>
             </div>
           )}
+        </div>
+      )}
+
+      {postError && (
+        <div className="mt-2 rounded-lg px-3 py-2 text-xs" style={{ background: 'rgba(220,38,38,0.08)', color: '#dc2626' }}>
+          {postError}
         </div>
       )}
 

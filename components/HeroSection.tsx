@@ -44,21 +44,23 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
         }}
       />
 
-      {/* AXIO7 logo block — right side, aligned with title start, doesn't extend into Live demo */}
+      {/* AXIO7 logo block — right side, top aligned with the title lines */}
       <div
         aria-hidden
-        className="absolute right-0 top-[5rem] hidden aspect-square w-[38%] max-w-[400px] items-center justify-center md:flex"
+        className="absolute right-0 hidden aspect-square w-[38%] max-w-[380px] items-center justify-center md:flex"
         style={{
+          top: '4.5rem',        /* visually aligns with "Everything Columbia" first line */
+          height: '38vw',
+          maxHeight: '380px',   /* stops before the Live demo section */
           background: 'rgba(247,240,232,0.055)',
           border: '1px solid rgba(247,240,232,0.11)',
           boxShadow: 'inset 0 0 0 1px rgba(216,71,39,0.08)',
-          maxHeight: '55vh',
         }}
       >
         <img
           src="/logo.png"
           alt=""
-          className="aspect-square w-[72%] max-w-[300px] select-none object-contain"
+          className="aspect-square w-[72%] max-w-[280px] select-none object-contain"
           style={{ opacity: 0.24 }}
         />
       </div>
@@ -210,9 +212,8 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
         </motion.div>
       </div>
 
-      {/* Featured panel-mode demo — visible to unauthenticated visitors */}
-      {!user?.authenticated && (
-        <div className="relative px-6 sm:px-12 pb-10 pt-2">
+      {/* Featured panel-mode demo — always visible */}
+      <div className="relative px-6 sm:px-12 pb-10 pt-2">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -260,7 +261,6 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
             </div>
           </motion.div>
         </div>
-      )}
     </section>
   );
 }
