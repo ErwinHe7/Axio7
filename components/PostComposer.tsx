@@ -104,6 +104,12 @@ export function PostComposer() {
       return;
     }
 
+    // Must be signed in to post
+    if (!userId) {
+      window.location.href = `/auth/signin?next=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+
     setSubmitting(true);
     setPostError(null);
     try {

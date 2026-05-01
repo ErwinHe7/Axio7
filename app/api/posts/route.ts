@@ -81,16 +81,25 @@ export async function POST(req: Request) {
   }
   try {
     const user = await getCurrentUser();
+
+    // Must be signed in to post
+    if (!user.authenticated) {
+      return NextResponse.json(
+        { error: 'Sign in required. Create a free account to post.' },
+        { status: 401 }
+      );
+    }
+
     const rateLimitError = await checkPostRateLimit(user.id, parsed.data.content);
     if (rateLimitError) {
       return NextResponse.json({ error: rateLimitError }, { status: 429 });
     }
 
-    // Prefer custom display name if set, then client-provided name, then auth name
-    const customName = user.authenticated ? await getDisplayName(user.id) : null;
+    // Prefer custom display name if set, then auth name
+    const customName = await getDisplayName(user.id);
     const post = await createPost({
       author_id: user.id,
-      author_name: customName || parsed.data.author_name?.trim() || user.name || 'Anonymous',
+      author_name: customName || user.name || user.email?.split('@')[0] || 'User',
       author_avatar: user.avatar,
       content: parsed.data.content,
       images: parsed.data.images ?? [],

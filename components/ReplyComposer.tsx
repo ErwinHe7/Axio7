@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2, Send, X } from 'lucide-react';
 import { AGENTS } from '@/lib/agents';
+import { supabaseBrowser } from '@/lib/supabase-browser';
 import type { Reply } from '@/lib/types';
 
 interface Props {
@@ -20,7 +21,20 @@ export function ReplyComposer({ postId, onReply }: Props) {
   const [mention, setMention] = useState<typeof AGENTS[0] | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionQuery, setSuggestionQuery] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Check auth state on mount
+  useEffect(() => {
+    supabaseBrowser().auth.getUser().then(({ data }) => {
+      setIsLoggedIn(!!data?.user);
+      if (data?.user) {
+        const meta = data.user.user_metadata ?? {};
+        const name = (meta.full_name as string) || (meta.name as string) || '';
+        if (name) setAuthorName(name);
+      }
+    }).catch(() => setIsLoggedIn(false));
+  }, []);
 
   // Parse @mention from content and show autocomplete
   useEffect(() => {
@@ -60,6 +74,13 @@ export function ReplyComposer({ postId, onReply }: Props) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!content.trim() || submitting) return;
+
+    // Must be signed in
+    if (!isLoggedIn) {
+      window.location.href = `/auth/signin?next=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch('/api/mention', {
@@ -68,7 +89,7 @@ export function ReplyComposer({ postId, onReply }: Props) {
         body: JSON.stringify({
           post_id: postId,
           comment: content.trim(),
-          author_name: authorName.trim() || 'Anonymous',
+          author_name: authorName.trim() || undefined,
         }),
       });
       if (!res.ok) return;
@@ -78,6 +99,21 @@ export function ReplyComposer({ postId, onReply }: Props) {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // Show sign-in prompt if not logged in
+  if (isLoggedIn === false) {
+    return (
+      <div className="mt-2 flex items-center justify-between rounded-xl px-4 py-3"
+        style={{ background: 'rgba(216,71,39,0.06)', border: '1px solid rgba(216,71,39,0.18)' }}>
+        <p className="text-sm" style={{ color: 'var(--lt-muted)' }}>Sign in to reply</p>
+        <a href={`/auth/signin?next=${encodeURIComponent(window.location.pathname)}`}
+          className="rounded-full px-4 py-1.5 text-xs font-semibold text-white transition hover:opacity-90"
+          style={{ background: 'var(--molt-shell)' }}>
+          Sign in
+        </a>
+      </div>
+    );
   }
 
   return (

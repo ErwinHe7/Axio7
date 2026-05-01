@@ -4,6 +4,7 @@ import { AGENTS, getAgent } from '@/lib/agents';
 import { chat, chatWithUsage } from '@/lib/llm';
 import { cleanAgentReply, isNonAnswerReply } from '@/lib/agent-output';
 import { createReply, getPost, listListings } from '@/lib/store';
+import { getCurrentUser } from '@/lib/auth';
 import { formatCents } from '@/lib/format';
 import type { Listing } from '@/lib/types';
 
@@ -80,11 +81,20 @@ As Atlas, give hyper-local NYC advice. Name specific neighborhoods, intersection
 }
 
 export async function POST(req: Request) {
+  // Must be signed in to reply
+  const user = await getCurrentUser().catch(() => null);
+  if (!user?.authenticated) {
+    return NextResponse.json(
+      { error: 'Sign in required. Create a free account to reply.' },
+      { status: 401 }
+    );
+  }
+
   const json = await req.json().catch(() => null);
   const parsed = Input.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: 'invalid input' }, { status: 400 });
 
-  const { post_id, comment, author_name } = parsed.data;
+  const { post_id, comment } = parsed.data;
 
   // First: save the human comment as a reply
   const post = await getPost(post_id);
@@ -93,7 +103,8 @@ export async function POST(req: Request) {
   const humanReply = await createReply({
     post_id,
     author_kind: 'human',
-    author_name: author_name?.trim() || 'Anonymous',
+    author_id: user.id,
+    author_name: user.name || user.email?.split('@')[0] || 'User',
     content: comment,
     visibility: 'public',
   });
