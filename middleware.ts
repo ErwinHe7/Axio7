@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { protectApiRequest } from '@/lib/api-protection';
 import { createAxioHandle, GUEST_COOKIE, normalizeAxioHandle } from '@/lib/guest-identity';
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
@@ -15,7 +16,18 @@ type CookieToSet = { name: string; value: string; options: CookieOptions };
  *      login. Guests can upgrade to real Supabase auth via /auth/signin.
  */
 export async function middleware(req: NextRequest) {
+  const apiProtection = protectApiRequest(req);
+  if (!apiProtection.allowed) {
+    return NextResponse.json(
+      { error: apiProtection.code, message: apiProtection.message },
+      { status: apiProtection.status, headers: apiProtection.headers }
+    );
+  }
+
   const res = NextResponse.next();
+  Object.entries(apiProtection.headers).forEach(([key, value]) => {
+    res.headers.set(key, value);
+  });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
