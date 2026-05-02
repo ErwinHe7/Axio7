@@ -27,20 +27,19 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
 
   return (
     <section
-      className="hero-dark relative -mx-4 overflow-hidden py-14 sm:py-20"
+      className="relative -mx-4 overflow-hidden py-14 sm:py-20"
       style={{
         background:
-          'radial-gradient(circle at 18% 18%, rgba(216,71,39,0.18), transparent 24rem), radial-gradient(circle at 74% 48%, rgba(247,240,232,0.08), transparent 26rem), linear-gradient(135deg, #101a24 0%, #07111c 52%, #05080d 100%)',
-        borderTop: '1px solid rgba(247,240,232,0.08)',
-        borderBottom: '1px solid rgba(216,71,39,0.16)',
+          'radial-gradient(circle at 18% 18%, rgba(216,71,39,0.10), transparent 24rem), radial-gradient(circle at 74% 48%, rgba(255,255,255,0.5), transparent 26rem), linear-gradient(135deg, #fffaf2 0%, var(--lt-bg) 42%, #efe2d1 100%)',
+        borderBottom: '1px solid var(--lt-border)',
       }}
     >
       <div
         aria-hidden
-        className="absolute inset-0 opacity-45"
+        className="absolute inset-0 opacity-30"
         style={{
           background:
-            'repeating-radial-gradient(circle at 0 0, rgba(247,240,232,0.12) 0 1px, transparent 1px 34px), linear-gradient(115deg, transparent 0%, rgba(247,240,232,0.06) 42%, transparent 72%)',
+            'repeating-radial-gradient(circle at 0 0, rgba(92,68,48,0.08) 0 1px, transparent 1px 34px), linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.3) 42%, transparent 72%)',
         }}
       />
 
@@ -59,13 +58,13 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
             variants={fadeUp}
             transition={{ duration: 0.5 }}
             className="mb-5 h-28 w-auto select-none sm:h-36 lg:h-40"
-            style={{ filter: 'drop-shadow(0 12px 28px rgba(216,71,39,0.42))' }}
+            style={{ filter: 'drop-shadow(0 12px 28px rgba(216,71,39,0.25))' }}
           />
 
           <motion.p
             variants={fadeUp}
             className="mb-4 text-xs font-semibold uppercase tracking-widest"
-            style={{ color: 'rgba(249,181,164,0.9)' }}
+            style={{ color: 'var(--molt-shell)' }}
           >
             COLUMBIA · NYC · EST. 2026
           </motion.p>
@@ -79,7 +78,7 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
                 transition={{ type: 'spring', stiffness: 90, damping: 16 }}
                 className="font-fraunces text-5xl font-black italic leading-[1.04] sm:text-6xl lg:text-[4.2rem]"
                 style={{
-                  background: 'linear-gradient(135deg, #fff7ec 0%, #f2c2b2 48%, var(--molt-shell) 100%)',
+                  background: 'linear-gradient(135deg, var(--molt-shell) 0%, var(--molt-coral) 48%, var(--lt-text) 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -93,7 +92,7 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
           <motion.p
             variants={fadeUp}
             className="mt-4 max-w-sm text-sm leading-relaxed"
-            style={{ color: 'rgba(247,240,232,0.72)' }}
+            style={{ color: 'var(--lt-muted)' }}
           >
             Find sublets, events, roommates, used furniture, and local intel without digging through 20 group chats.
           </motion.p>
@@ -103,18 +102,19 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
             variants={fadeUp}
             className="mt-6 grid max-w-xl grid-cols-3 overflow-hidden rounded-[18px]"
             style={{
-              background: 'rgba(247,240,232,0.075)',
-              border: '1px solid rgba(247,240,232,0.12)',
+              background: 'var(--lt-surface)',
+              border: '1px solid var(--lt-border)',
+              boxShadow: '0 2px 12px rgba(55,39,28,0.06)',
             }}
           >
             {features.map((f, index) => (
               <Link
                 key={f.label}
                 href={f.href}
-                className="flex min-h-[52px] items-center justify-center px-3 text-center text-[12px] font-semibold transition hover:bg-white/10 sm:text-[13px]"
+                className="flex min-h-[52px] items-center justify-center px-3 text-center text-[12px] font-semibold transition hover:bg-black/[0.03] sm:text-[13px]"
                 style={{
-                  color: 'var(--molt-sand)',
-                  borderLeft: index === 0 ? '0' : '1px solid rgba(247,240,232,0.12)',
+                  color: 'var(--lt-text)',
+                  borderLeft: index === 0 ? '0' : '1px solid var(--lt-border)',
                 }}
               >
                 {f.label}
@@ -128,10 +128,10 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
               <>
                 <div
                   className="inline-flex items-center gap-2.5 rounded-[22px] px-4 py-2.5"
-                  style={{ background: 'rgba(247,240,232,0.1)', border: '1px solid rgba(247,240,232,0.13)' }}
+                  style={{ background: 'var(--lt-surface)', border: '1px solid var(--lt-border)' }}
                 >
                   {user.avatar ? (
-                    <img src={user.avatar} alt="" className="h-7 w-7 rounded-full ring-1 ring-white/15" />
+                    <img src={user.avatar} alt="" className="h-7 w-7 rounded-full ring-1 ring-black/5" />
                   ) : (
                     <span
                       className="inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
@@ -140,12 +140,12 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
                       {user.name[0]?.toUpperCase()}
                     </span>
                   )}
-                  <span className="text-sm font-medium" style={{ color: 'var(--molt-sand)' }}>{user.name}</span>
+                  <span className="text-sm font-medium" style={{ color: 'var(--lt-text)' }}>{user.name}</span>
                 </div>
                 <Link href="/ask" className="inline-flex items-center gap-2 rounded-[22px] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90 active:scale-95" style={{ background: 'var(--molt-shell)' }}>
                   Ask AXIO7
                 </Link>
-                <a href="#feed" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid rgba(247,240,232,0.13)', background: 'rgba(247,240,232,0.08)', color: 'var(--molt-sand)' }}>
+                <a href="#feed" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid var(--lt-border)', background: 'var(--lt-surface)', color: 'var(--lt-text)' }}>
                   Feed
                 </a>
               </>
@@ -155,7 +155,7 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
                   <GoogleIcon />
                   Join with Google
                 </Link>
-                <a href="#feed" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid rgba(247,240,232,0.13)', background: 'rgba(247,240,232,0.08)', color: 'var(--molt-sand)' }}>
+                <a href="#feed" className="inline-flex items-center gap-2 rounded-[22px] px-5 py-3 text-sm font-semibold transition hover:opacity-80" style={{ border: '1px solid var(--lt-border)', background: 'var(--lt-surface)', color: 'var(--lt-text)' }}>
                   Browse Feed
                 </a>
               </>
@@ -163,10 +163,10 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
           </motion.div>
 
           {/* Powered by */}
-          <motion.p variants={fadeUp} className="mt-7 text-[11px] leading-relaxed" style={{ color: 'rgba(247,240,232,0.45)' }}>
+          <motion.p variants={fadeUp} className="mt-7 text-[11px] leading-relaxed" style={{ color: 'var(--lt-subtle)' }}>
             powered by{' '}
             {['ChatGPT', 'Claude', 'DeepSeek', 'Nvidia Nemotron', 'Qwen', 'Grok', 'Gemini'].map((m, i) => (
-              <span key={m} style={{ color: 'rgba(247,240,232,0.6)' }}>
+              <span key={m} style={{ color: 'var(--lt-muted)' }}>
                 {i > 0 && ' / '}{m}
               </span>
             ))}
@@ -182,11 +182,11 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
                   alt={a.name}
                   title={a.name}
                   className="h-8 w-8 rounded-full"
-                  style={{ boxShadow: '0 0 0 2px #07111c' }}
+                  style={{ boxShadow: '0 0 0 2px var(--lt-bg)' }}
                 />
               ))}
             </div>
-            <span className="text-xs" style={{ color: 'rgba(247,240,232,0.55)' }}>7 agents ready</span>
+            <span className="text-xs" style={{ color: 'var(--lt-subtle)' }}>7 agents ready</span>
           </motion.div>
         </motion.div>
 
@@ -198,17 +198,17 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
             width: '38%',
             maxWidth: '400px',
             aspectRatio: '1 / 1',
-            marginTop: '7.5rem',   /* skip past lobster + eyebrow to align with title */
-            background: 'rgba(247,240,232,0.055)',
-            border: '1px solid rgba(247,240,232,0.11)',
-            boxShadow: 'inset 0 0 0 1px rgba(216,71,39,0.08)',
+            marginTop: '7.5rem',
+            background: 'rgba(92,68,48,0.04)',
+            border: '1px solid var(--lt-border)',
+            boxShadow: 'inset 0 0 0 1px rgba(216,71,39,0.06)',
           }}
         >
           <img
             src="/logo.png"
             alt=""
             className="aspect-square w-[72%] max-w-[280px] select-none object-contain"
-            style={{ opacity: 0.24 }}
+            style={{ opacity: 0.18 }}
           />
         </div>
       </div>
@@ -221,14 +221,14 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
             transition={{ delay: 0.55, duration: 0.45, ease: 'easeOut' }}
             className="mx-auto max-w-3xl"
           >
-            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-center" style={{ color: 'rgba(249,181,164,0.7)' }}>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-center" style={{ color: 'var(--molt-shell)' }}>
               Live demo — ask anything
             </p>
             <div
               className="rounded-[22px] px-5 py-4"
-              style={{ background: 'rgba(247,240,232,0.06)', border: '1px solid rgba(247,240,232,0.12)' }}
+              style={{ background: 'var(--lt-surface)', border: '1px solid var(--lt-border)', boxShadow: '0 4px 20px rgba(55,39,28,0.06)' }}
             >
-              <p className="text-sm font-medium mb-4" style={{ color: 'rgba(247,240,232,0.9)' }}>
+              <p className="text-sm font-medium mb-4" style={{ color: 'var(--lt-text)' }}>
                 "Should I take the MBB consulting offer or stay at my NYC startup? I have 3 days to decide."
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -236,7 +236,7 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
                   <div
                     key={r.agent}
                     className="relative rounded-xl px-3 py-2.5 pl-4 text-xs"
-                    style={{ background: 'rgba(247,240,232,0.05)', border: '1px solid rgba(247,240,232,0.1)' }}
+                    style={{ background: 'rgba(247,240,232,0.5)', border: '1px solid var(--lt-border)' }}
                   >
                     <span
                       className="absolute left-0 top-0 h-full w-[3px] rounded-l-xl"
@@ -246,7 +246,7 @@ export function HeroSection({ user }: { lastPostTime?: string; user?: HeroUser }
                       <img src={r.avatar} alt={r.agent} className="h-4 w-4 rounded-full" />
                       <span className="font-semibold" style={{ color: r.color }}>{r.agent}</span>
                     </div>
-                    <p style={{ color: 'rgba(247,240,232,0.7)', lineHeight: 1.55 }}>{r.text}</p>
+                    <p style={{ color: 'var(--lt-muted)', lineHeight: 1.55 }}>{r.text}</p>
                   </div>
                 ))}
               </div>
