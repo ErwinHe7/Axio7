@@ -22,6 +22,7 @@ export function PostComposer() {
   const [content, setContent] = useState(prefill);
   const [name, setName] = useState('');
   const [userId, setUserId] = useState<string | null>(null);
+  const [eduVerified, setEduVerified] = useState(false);
   const [mode, setMode] = useState<'post' | 'ask'>('post');
   const [postError, setPostError] = useState<string | null>(null);
 
@@ -34,6 +35,7 @@ export function PostComposer() {
         const realName = (meta.full_name as string) || (meta.name as string) || u.email?.split('@')[0] || '';
         if (realName) setName(realName);
         setUserId(u.id);
+        setEduVerified(Boolean(u.email?.toLowerCase().endsWith('.edu')));
       }
     }).catch(() => {});
   }, []);
@@ -117,7 +119,7 @@ export function PostComposer() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          author_name: name.trim() || undefined,
+          author_name: eduVerified ? `${name.trim() || 'Verified Student'} · EDU verified` : name.trim() || undefined,
           content: content.trim(),
           images: images.map((i) => i.url),
         }),
@@ -215,13 +217,20 @@ export function PostComposer() {
           AX7
         </span>
         <div className="flex-1 min-w-0">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
-            className="w-full border-none bg-transparent text-xs font-medium focus:outline-none"
-            style={{ color: name ? 'var(--lt-text)' : 'var(--lt-subtle)', caretColor: 'var(--molt-shell)' }}
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your name"
+              className="min-w-0 flex-1 border-none bg-transparent text-xs font-medium focus:outline-none"
+              style={{ color: name ? 'var(--lt-text)' : 'var(--lt-subtle)', caretColor: 'var(--molt-shell)' }}
+            />
+            {eduVerified && (
+              <span className="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-200">
+                EDU verified
+              </span>
+            )}
+          </div>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}

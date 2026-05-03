@@ -22,7 +22,7 @@ export default function HousingListingsPage({ searchParams }: { searchParams?: {
           <div>
             <div className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--r-pink2)' }}>Normalized housing inventory</div>
             <h1 className="font-fraunces text-5xl font-black italic leading-none text-white sm:text-7xl">Housing Listings</h1>
-            <p className="mt-3 max-w-2xl text-sm" style={{ color: 'var(--r-text2)' }}>Verified .edu sublets, source-labeled building availability, imported/manual listings, match scores, and risk checks.</p>
+            <p className="mt-3 max-w-2xl text-sm" style={{ color: 'var(--r-text2)' }}>Verified sublets, building availability, match scores, and risk checks.</p>
           </div>
           <Link href="/housing/post-sublet" className="r-btn-pink"><Plus className="h-4 w-4" /> Post sublet</Link>
         </div>

@@ -3,6 +3,7 @@ import { ArrowRight, Bell, Home, MessageSquare, ShieldCheck } from 'lucide-react
 import { LightPage } from '@/components/LightPage';
 import { HousingListingCard } from '@/components/housing/HousingListingCard';
 import { HousingWorkflow } from '@/components/housing/HousingWorkflow';
+import { HousingMap } from '@/components/housing/HousingMap';
 import { HOUSING_LISTINGS, HousingPreferenceSchema } from '@/lib/housing';
 import { runMatchingAgent } from '@/lib/housing/agents';
 
@@ -22,7 +23,7 @@ export default function HousingPage({ searchParams }: { searchParams?: { q?: str
             </div>
             <h1 className="font-fraunces text-5xl font-black italic leading-none text-white sm:text-7xl">Find housing in NYC with AI agents.</h1>
             <p className="mt-5 text-lg leading-relaxed" style={{ color: 'var(--r-text2)' }}>
-              Verified student sublets, building availability, neighborhood intelligence, roommate matching, risk detection, auto outreach, and saved-search monitoring for Columbia, NYU, and NYC newcomers.
+              Search verified sublets, building availability, neighborhoods, roommates, risk checks, and outreach in one agent workflow.
             </p>
             <form action="/housing/matches" className="mt-6 flex flex-col gap-3 rounded-2xl border border-white/10 bg-black/20 p-3 sm:flex-row">
               <input
@@ -45,10 +46,20 @@ export default function HousingPage({ searchParams }: { searchParams?: { q?: str
         <section>
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <div className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--r-pink2)' }}>Top agent-ranked candidates</div>
-              <h2 className="mt-1 text-2xl font-black text-white">Verified + risk-scored housing matches</h2>
+              <div className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--r-pink2)' }}>Map view</div>
+              <h2 className="mt-1 text-2xl font-black text-white">Tap listings on the NYC map</h2>
             </div>
             <Link href="/housing/listings" className="hidden text-sm font-bold sm:inline" style={{ color: 'var(--r-pink2)' }}>View all</Link>
+          </div>
+          <HousingMap listings={HOUSING_LISTINGS} />
+        </section>
+
+        <section>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--r-pink2)' }}>Top matches</div>
+              <h2 className="mt-1 text-2xl font-black text-white">Verified + risk-scored candidates</h2>
+            </div>
           </div>
           <div className="grid gap-4 lg:grid-cols-3">
             {matches.map((match) => <HousingListingCard key={match.listing.id} listing={match.listing} />)}

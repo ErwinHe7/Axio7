@@ -65,6 +65,8 @@ export type HousingListing = {
   address?: string;
   borough: string;
   neighborhood: string;
+  lat?: number;
+  lng?: number;
   price: number;
   realMonthlyCost?: number;
   deposit?: number;
