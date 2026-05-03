@@ -24,7 +24,10 @@ export default function HousingListingsPage({ searchParams }: { searchParams?: {
             <h1 className="font-fraunces text-5xl font-black italic leading-none text-white sm:text-7xl">Housing Listings</h1>
             <p className="mt-3 max-w-2xl text-sm" style={{ color: 'var(--r-text2)' }}>Verified sublets, building availability, match scores, and risk checks.</p>
           </div>
-          <Link href="/housing/post-sublet" className="r-btn-pink"><Plus className="h-4 w-4" /> Post sublet</Link>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/housing#map" className="r-btn-ghost">Open map</Link>
+            <Link href="/housing/post-sublet" className="r-btn-pink"><Plus className="h-4 w-4" /> Post sublet</Link>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           {['All', 'Manhattan', 'Queens', 'Brooklyn', 'New Jersey nearby'].map((borough) => (

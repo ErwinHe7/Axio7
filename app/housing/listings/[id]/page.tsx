@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, AlertTriangle, BadgeCheck, MessageSquare, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, BadgeCheck, ShieldCheck } from 'lucide-react';
 import { LightPage } from '@/components/LightPage';
 import { HOUSING_LISTINGS, HousingPreferenceSchema } from '@/lib/housing';
-import { runCommunicationAgent, runRiskAgent } from '@/lib/housing/agents';
+import { runRiskAgent } from '@/lib/housing/agents';
 import { scoreHousingListing } from '@/lib/housing/scoring';
+import { HousingListingActions } from '@/components/housing/HousingListingActions';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,6 @@ export default function HousingListingDetailPage({ params }: { params: { id: str
   const preference = HousingPreferenceSchema.parse({});
   const match = scoreHousingListing(listing, preference);
   const risk = runRiskAgent(listing);
-  const draft = runCommunicationAgent({ listing, preference, language: 'en' });
 
   return (
     <LightPage>
@@ -53,17 +53,7 @@ export default function HousingListingDetailPage({ params }: { params: { id: str
           </section>
         </div>
 
-        <section className="rounded-[24px] border p-5" style={{ background: 'var(--lt-surface)', borderColor: 'var(--lt-border)' }}>
-          <h2 className="mb-3 flex items-center gap-2 text-xl font-black text-white"><MessageSquare className="h-5 w-5 text-pink-300" /> Communication Agent draft</h2>
-          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-            <div className="text-sm font-bold text-white">{draft.subject}</div>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed" style={{ color: 'var(--r-text2)' }}>{draft.body}</p>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-3">
-            <Link href="/inbox" className="r-btn-pink">Open Message →</Link>
-            <Link href={`/housing/listings/${listing.id}`} className="r-btn-ghost">Save listing</Link>
-          </div>
-        </section>
+        <HousingListingActions listing={listing} />
       </div>
     </LightPage>
   );

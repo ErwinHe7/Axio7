@@ -43,7 +43,7 @@ export default function HousingPage({ searchParams }: { searchParams?: { q?: str
           </div>
         </section>
 
-        <section>
+        <section id="map">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <div className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--r-pink2)' }}>Map view</div>

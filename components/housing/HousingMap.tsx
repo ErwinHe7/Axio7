@@ -61,7 +61,7 @@ export function HousingMap({ listings }: { listings: HousingListing[] }) {
           <div className="mt-4 grid gap-2 text-sm" style={{ color: 'var(--r-text2)' }}>
             <span className="inline-flex items-center gap-2"><MapPin className="h-4 w-4 text-pink-300" />${active.price.toLocaleString()} / month</span>
             <span className="inline-flex items-center gap-2"><Train className="h-4 w-4 text-pink-300" />{active.commute.label ?? 'Commute estimate available'}</span>
-            <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-emerald-300" />Risk {active.riskScore}/100 · {active.verificationStatus.replace('_', ' ')}</span>
+            <span className="inline-flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-emerald-300" />Risk {active.riskScore}/100 · {active.isEduVerifiedPost ? 'EDU verified' : active.verificationStatus.replace('_', ' ')}</span>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {active.matchReasons?.slice(0, 3).map((reason) => (

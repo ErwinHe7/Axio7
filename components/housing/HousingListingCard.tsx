@@ -16,7 +16,7 @@ export function HousingListingCard({ listing }: { listing: HousingListing }) {
           <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: 'var(--r-pink2)' }}>
             <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1">
               {listing.verificationStatus === 'proof_uploaded' || listing.isEduVerifiedPost ? <BadgeCheck className="h-3 w-3" /> : <Home className="h-3 w-3" />}
-              {listing.verificationStatus.replace('_', ' ')}
+              {listing.isEduVerifiedPost ? 'EDU verified' : listing.verificationStatus.replace('_', ' ')}
             </span>
             <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1">{listing.sourceType.replace('_', ' ')}</span>
           </div>
