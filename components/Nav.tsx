@@ -13,19 +13,16 @@ export async function Nav() {
   ]);
 
   return (
-    <header
-      className="nav-light sticky top-0 z-30 backdrop-blur-xl"
-      style={{
-        background: 'rgba(247,240,232,0.82)',
-        borderBottom: '1px solid var(--lt-border)',
-      }}
-    >
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        <Link href="/" className="flex items-center">
-          <img src="/logo.png" alt="AXIO7" className="h-12 w-auto" />
+    <header className="app-topbar sticky top-0 z-30">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:py-4">
+        <Link href="/" className="app-topbar-logo">
+          <span className="app-topbar-mark">
+            <img src="/axio7-logo.png" alt="AXIO7" />
+          </span>
+          <span className="hidden font-mono text-sm font-black tracking-[0.18em] text-white sm:inline">AXIO7</span>
         </Link>
 
-        <nav className="flex min-w-0 items-center gap-2 text-sm">
+        <nav className="flex min-w-0 items-center gap-3 text-sm">
           <NavTabs unreadMessages={unreadMessages} />
 
           {/* Admin link — only visible to site owner */}
@@ -49,12 +46,8 @@ export async function Nav() {
           {user.authenticated ? (
             <UserChip user={user} />
           ) : (
-            <Link
-              href="/auth/signin"
-              className="ml-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:opacity-90"
-              style={{ background: 'var(--molt-shell)' }}
-            >
-              <LogIn className="h-3.5 w-3.5" /> Sign in
+            <Link href="/auth/signin" className="app-signin-btn">
+              <LogIn className="h-4 w-4" /> Sign in
             </Link>
           )}
         </nav>
@@ -65,28 +58,24 @@ export async function Nav() {
 
 function UserChip({ user }: { user: { name: string; avatar: string | null } }) {
   return (
-    <div
-      className="ml-2 flex items-center gap-1.5 rounded-lg px-2 py-1"
-      style={{ border: '1px solid var(--lt-border)', background: 'rgba(255,255,255,0.56)' }}
-    >
+    <div className="ml-2 flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.06] px-2.5 py-1.5 shadow-[0_0_20px_rgba(255,62,197,0.12)] backdrop-blur-xl">
       {user.avatar ? (
         <img src={user.avatar} alt="" className="h-6 w-6 rounded-full" />
       ) : (
         <span
           className="inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold text-white"
-          style={{ background: 'var(--molt-shell)' }}
+          style={{ background: 'linear-gradient(135deg,var(--r-pink),var(--r-violet))' }}
         >
           {(user.name?.[0] ?? 'U').toUpperCase()}
         </span>
       )}
-      <span className="hidden max-w-[7rem] truncate text-xs font-medium sm:block" style={{ color: 'var(--lt-text)' }}>
+      <span className="hidden max-w-[7rem] truncate text-xs font-medium text-white/85 sm:block">
         {user.name}
       </span>
       <a
         href="/auth/signout"
         title="Sign out"
-        className="rounded p-0.5 opacity-40 transition hover:opacity-100"
-        style={{ color: 'var(--lt-muted)' }}
+        className="rounded p-0.5 text-white/45 transition hover:text-white"
       >
         <LogOut className="h-3.5 w-3.5" />
       </a>

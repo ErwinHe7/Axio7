@@ -15,7 +15,7 @@ export default async function InboxPage() {
       <LightPage>
         <div className="py-20 text-center space-y-4">
           <MessageSquare className="mx-auto h-10 w-10 opacity-20" style={{ color: 'var(--lt-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--lt-muted)' }}>Sign in to see your trade conversations.</p>
+          <p className="text-sm" style={{ color: 'var(--lt-muted)' }}>Sign in to see your AXIO7 messages and trade conversations.</p>
           <Link
             href="/auth/signin?next=/inbox"
             className="inline-flex rounded-full px-5 py-2.5 text-sm font-semibold text-white"
@@ -43,7 +43,7 @@ export default async function InboxPage() {
               backgroundClip: 'text',
             }}
           >
-            Inbox
+            Message
           </h1>
           <Link
             href="/trade"
@@ -62,7 +62,7 @@ export default async function InboxPage() {
             <MessageSquare className="mx-auto h-8 w-8 mb-3 opacity-20" style={{ color: 'var(--lt-muted)' }} />
             <p className="text-sm font-medium" style={{ color: 'var(--lt-text)' }}>No active trades yet.</p>
             <p className="mt-1 text-xs" style={{ color: 'var(--lt-muted)' }}>
-              When you connect with a buyer or seller, your conversation will appear here.
+              When you connect with a buyer or seller, your message thread will appear here.
             </p>
             <Link
               href="/trade"
