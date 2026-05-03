@@ -1,18 +1,13 @@
 import Link from 'next/link';
 import { ArrowRight, Bell, Home, MessageSquare, ShieldCheck } from 'lucide-react';
 import { LightPage } from '@/components/LightPage';
-import { HousingListingCard } from '@/components/housing/HousingListingCard';
 import { HousingWorkflow } from '@/components/housing/HousingWorkflow';
-import { HousingMap } from '@/components/housing/HousingMap';
-import { HOUSING_LISTINGS, HousingPreferenceSchema } from '@/lib/housing';
-import { runMatchingAgent } from '@/lib/housing/agents';
+import { HousingSearchExperience } from '@/components/housing/HousingSearchExperience';
+import { HOUSING_LISTINGS } from '@/lib/housing';
 
 export const dynamic = 'force-dynamic';
 
-export default function HousingPage({ searchParams }: { searchParams?: { q?: string } }) {
-  const preference = HousingPreferenceSchema.parse({ rawText: searchParams?.q });
-  const matches = runMatchingAgent(preference).listingMatches.slice(0, 3);
-
+export default function HousingPage() {
   return (
     <LightPage>
       <div className="space-y-8">
@@ -43,28 +38,7 @@ export default function HousingPage({ searchParams }: { searchParams?: { q?: str
           </div>
         </section>
 
-        <section id="map">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--r-pink2)' }}>Map view</div>
-              <h2 className="mt-1 text-2xl font-black text-white">Tap listings on the NYC map</h2>
-            </div>
-            <Link href="/housing/listings" className="hidden text-sm font-bold sm:inline" style={{ color: 'var(--r-pink2)' }}>View all</Link>
-          </div>
-          <HousingMap listings={HOUSING_LISTINGS} />
-        </section>
-
-        <section>
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--r-pink2)' }}>Top matches</div>
-              <h2 className="mt-1 text-2xl font-black text-white">Verified + risk-scored candidates</h2>
-            </div>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {matches.map((match) => <HousingListingCard key={match.listing.id} listing={match.listing} />)}
-          </div>
-        </section>
+        <HousingSearchExperience listings={HOUSING_LISTINGS} />
 
         <section>
           <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--r-pink2)' }}>
