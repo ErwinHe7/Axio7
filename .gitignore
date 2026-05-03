@@ -18,6 +18,11 @@ coverage
 next-env.d.ts
 tsconfig.tsbuildinfo
 Web Client file/
-.claude/worktrees/
+.claude/
+
+# design source / scratch — never ship
+axio7.zip
+axio7_design/
+tmp_restore/
 
 .vercel

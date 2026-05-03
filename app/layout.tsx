@@ -3,8 +3,8 @@ import { Fraunces, Instrument_Serif, Inter } from 'next/font/google';
 import './globals.css';
 import { Nav } from '@/components/Nav';
 import { Footer } from '@/components/Footer';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BgMesh } from '@/components/BgMesh';
+import { AppShell } from '@/components/AppShell';
 import { GoogleAnalytics } from '@/components/GoogleAnalytics';
 import { PostHogProvider } from '@/components/PostHogProvider';
 import { PostHogSession } from '@/components/PostHogSession';
@@ -62,12 +62,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <PostHogProvider>
           <PostHogSession />
           <GoogleAnalytics />
-          <BgMesh />
-          <Nav />
-          <main className="mx-auto max-w-5xl px-4 pb-24 pt-6">
-            <ErrorBoundary>{children}</ErrorBoundary>
-          </main>
-          <Footer />
+          <AppShell bg={<BgMesh />} nav={<Nav />} footer={<Footer />}>
+            {children}
+          </AppShell>
         </PostHogProvider>
       </body>
     </html>

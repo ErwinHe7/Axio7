@@ -125,6 +125,9 @@ body::before {
   --r-serif: var(--font-instrument-serif), Georgia, serif;
 }
 
+/* Body-level overrides for the marketing home — :has() switches palette
+   without depending on JS hydration. AppShell already strips shared Nav/
+   Footer/main wrapper, so we only need to swap the warm gold backdrop. */
 html:has(.r-page) { scroll-behavior: smooth; }
 body:has(.r-page) {
   background: var(--r-bg) !important;
@@ -133,14 +136,6 @@ body:has(.r-page) {
   overflow-x: hidden;
 }
 body:has(.r-page)::before { display: none; }
-body:has(.r-page) header.nav-light,
-body:has(.r-page) footer:not(.r-footer) { display: none; }
-body:has(.r-page) main:has(.r-page) {
-  max-width: none;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
 body:has(.r-page) ::selection { background: var(--r-pink); color: #fff; }
 body:has(.r-page) ::-webkit-scrollbar { width: 6px; height: 6px; }
 body:has(.r-page) ::-webkit-scrollbar-track { background: transparent; }
