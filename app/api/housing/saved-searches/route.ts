@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { HousingPreferenceSchema } from '@/lib/housing';
 import { runMonitoringAgent } from '@/lib/housing/agents';
+import { createSavedSearch, listSavedSearches, recordAgentRun } from '@/lib/housing/store';
 import { getCurrentUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
@@ -9,8 +10,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   const user = await getCurrentUser();
   if (!user.authenticated) return NextResponse.json({ savedSearches: [] });
-  const preference = HousingPreferenceSchema.parse({ userId: user.id, schoolEmail: user.email ?? '' });
-  return NextResponse.json({ savedSearches: [{ id: 'saved-demo', alertFrequency: 'daily', minMatchScore: 80, preference, enabled: true }], persisted: false });
+  return NextResponse.json({ savedSearches: await listSavedSearches(user.id) });
 }
 
 export async function POST(req: Request) {
@@ -19,5 +19,7 @@ export async function POST(req: Request) {
   const json = await req.json().catch(() => null);
   const preference = HousingPreferenceSchema.parse({ ...json?.preference, userId: user.id });
   const monitor = runMonitoringAgent(preference, json?.minMatchScore ?? 80);
-  return NextResponse.json({ savedSearch: { id: `saved-${Date.now()}`, preference, alertFrequency: json?.alertFrequency ?? 'daily', minMatchScore: json?.minMatchScore ?? 80, enabled: true }, monitor, persisted: false });
+  const savedSearch = await createSavedSearch(user.id, json?.filters ?? preference, json?.minMatchScore ?? 80);
+  await recordAgentRun({ agent: 'monitoring', status: 'completed', userId: user.id, input: { preference, savedSearch }, output: monitor });
+  return NextResponse.json({ savedSearch, monitor, persisted: true });
 }

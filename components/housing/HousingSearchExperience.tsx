@@ -13,6 +13,23 @@ export function HousingSearchExperience({ listings }: { listings: HousingListing
   const [noFeeOnly, setNoFeeOnly] = useState(false);
   const [riskMax, setRiskMax] = useState(100);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function saveSearch() {
+    setSaving(true);
+    const filters = { borough, maxPrice, verifiedOnly, noFeeOnly, riskMax };
+    const res = await fetch('/api/housing/saved-searches', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filters, minMatchScore: 80, preference: { budgetMax: maxPrice, preferredBoroughs: borough === 'All' ? ['Manhattan'] : [borough], maxCommuteMinutes: 30 } }),
+    });
+    setSaving(false);
+    if (res.status === 401) {
+      window.location.href = `/auth/signin?next=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+    if (res.ok) setSaved(true);
+  }
 
   const filtered = useMemo(() => listings.filter((listing) => {
     if (borough !== 'All' && listing.borough !== borough) return false;
@@ -61,8 +78,8 @@ export function HousingSearchExperience({ listings }: { listings: HousingListing
             <ShieldCheck className="mr-1 inline h-4 w-4" /> Verified only
           </button>
           <button type="button" onClick={() => setNoFeeOnly((value) => !value)} className="rounded-full border px-4 py-2 text-sm font-bold" style={{ borderColor: noFeeOnly ? 'rgba(255,62,197,0.45)' : 'var(--lt-border)', background: noFeeOnly ? 'rgba(255,62,197,0.12)' : 'rgba(255,255,255,0.04)', color: noFeeOnly ? 'var(--r-pink2)' : 'var(--r-text2)' }}>No fee</button>
-          <button type="button" onClick={() => setSaved(true)} className="r-btn-pink ml-auto">
-            <Bell className="h-4 w-4" /> {saved ? 'Saved search active' : 'Save + monitor'}
+          <button type="button" onClick={saveSearch} disabled={saving} className="r-btn-pink ml-auto">
+            <Bell className="h-4 w-4" /> {saving ? 'Saving...' : saved ? 'Saved search active' : 'Save + monitor'}
           </button>
         </div>
         {saved && (

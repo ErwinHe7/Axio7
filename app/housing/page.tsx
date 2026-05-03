@@ -3,11 +3,13 @@ import { ArrowRight, Bell, Home, MessageSquare, ShieldCheck } from 'lucide-react
 import { LightPage } from '@/components/LightPage';
 import { HousingWorkflow } from '@/components/housing/HousingWorkflow';
 import { HousingSearchExperience } from '@/components/housing/HousingSearchExperience';
-import { HOUSING_LISTINGS } from '@/lib/housing';
+import { listHousingListings } from '@/lib/housing/store';
 
 export const dynamic = 'force-dynamic';
 
-export default function HousingPage() {
+export default async function HousingPage() {
+  const listings = await listHousingListings();
+
   return (
     <LightPage>
       <div className="space-y-8">
@@ -38,7 +40,7 @@ export default function HousingPage() {
           </div>
         </section>
 
-        <HousingSearchExperience listings={HOUSING_LISTINGS} />
+        <HousingSearchExperience listings={listings} />
 
         <section>
           <div className="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em]" style={{ color: 'var(--r-pink2)' }}>

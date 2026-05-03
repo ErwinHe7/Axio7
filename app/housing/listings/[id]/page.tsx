@@ -2,15 +2,16 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, AlertTriangle, BadgeCheck, ShieldCheck } from 'lucide-react';
 import { LightPage } from '@/components/LightPage';
-import { HOUSING_LISTINGS, HousingPreferenceSchema } from '@/lib/housing';
+import { HousingPreferenceSchema } from '@/lib/housing';
+import { getHousingListing } from '@/lib/housing/store';
 import { runRiskAgent } from '@/lib/housing/agents';
 import { scoreHousingListing } from '@/lib/housing/scoring';
 import { HousingListingActions } from '@/components/housing/HousingListingActions';
 
 export const dynamic = 'force-dynamic';
 
-export default function HousingListingDetailPage({ params }: { params: { id: string } }) {
-  const listing = HOUSING_LISTINGS.find((item) => item.id === params.id);
+export default async function HousingListingDetailPage({ params }: { params: { id: string } }) {
+  const listing = await getHousingListing(params.id);
   if (!listing) return notFound();
   const preference = HousingPreferenceSchema.parse({});
   const match = scoreHousingListing(listing, preference);

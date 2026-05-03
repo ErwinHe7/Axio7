@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { HOUSING_LISTINGS, HousingSourceType, LeaseTerm, RoomType } from '@/lib/housing';
+import { HousingSourceType, LeaseTerm, RoomType } from '@/lib/housing';
 import { assessHousingRisk } from '@/lib/housing/risk';
+import { buildDraftHousingListing, createHousingListing, listHousingListings, recordAgentRun } from '@/lib/housing/store';
 import { getCurrentUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
@@ -32,16 +33,13 @@ const ListingInput = z.object({
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const neighborhood = url.searchParams.get('neighborhood')?.toLowerCase();
-  const borough = url.searchParams.get('borough')?.toLowerCase();
-  const maxPrice = Number(url.searchParams.get('maxPrice') || '0');
-  const verified = url.searchParams.get('verified') === 'true';
-  const listings = HOUSING_LISTINGS.filter((listing) => {
-    if (neighborhood && !listing.neighborhood.toLowerCase().includes(neighborhood)) return false;
-    if (borough && !listing.borough.toLowerCase().includes(borough)) return false;
-    if (maxPrice && listing.price > maxPrice) return false;
-    if (verified && !listing.isEduVerifiedPost && listing.verificationStatus !== 'admin_verified') return false;
-    return true;
+  const listings = await listHousingListings({
+    neighborhood: url.searchParams.get('neighborhood') ?? undefined,
+    borough: url.searchParams.get('borough') ?? undefined,
+    maxPrice: Number(url.searchParams.get('maxPrice') || '0') || undefined,
+    verifiedOnly: url.searchParams.get('verified') === 'true' || url.searchParams.get('verifiedOnly') === 'true',
+    noFeeOnly: url.searchParams.get('noFeeOnly') === 'true',
+    maxRisk: Number(url.searchParams.get('maxRisk') || '0') || undefined,
   });
   return NextResponse.json({ listings });
 }
@@ -52,23 +50,17 @@ export async function POST(req: Request) {
   const json = await req.json().catch(() => null);
   const parsed = ListingInput.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: 'invalid input', issues: parsed.error.flatten() }, { status: 400 });
-  const draft = {
-    id: `hx-user-${Date.now()}`,
-    ...parsed.data,
-    realMonthlyCost: parsed.data.price + Math.round((parsed.data.brokerFee ?? 0) / 12),
-    commute: {},
-    postedByUserId: user.id,
-    posterName: user.name,
-    isEduVerifiedPost: String(user.email ?? '').endsWith('.edu'),
-    verificationStatus: String(user.email ?? '').endsWith('.edu') ? 'edu_verified' as const : 'unverified' as const,
-    riskScore: 50,
-    riskLevel: 'medium' as const,
-    riskReasons: [],
-    positiveSignals: [],
-    status: 'draft' as const,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
+
+  const draft = buildDraftHousingListing(parsed.data, user);
   const risk = assessHousingRisk(draft);
-  return NextResponse.json({ listing: { ...draft, ...risk, status: 'needs_review' }, risk, persisted: false });
+  const risked = { ...draft, ...risk, status: risk.riskLevel === 'high' ? 'needs_review' as const : 'active' as const };
+
+  try {
+    const listing = await createHousingListing(risked, risk);
+    await recordAgentRun({ agent: 'risk', status: 'completed', userId: user.id, listingId: listing.id, input: parsed.data, output: risk });
+    return NextResponse.json({ listing, risk, persisted: true });
+  } catch (err: any) {
+    await recordAgentRun({ agent: 'risk', status: 'failed', userId: user.id, input: parsed.data, output: { error: err?.message ?? 'failed' } });
+    return NextResponse.json({ listing: risked, risk, persisted: false, warning: err?.message ?? 'Supabase unavailable; returned preview only' });
+  }
 }

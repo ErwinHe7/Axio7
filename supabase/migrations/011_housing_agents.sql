@@ -108,12 +108,24 @@ create table if not exists public.housing_preferences (
 create table if not exists public.housing_saved_searches (
   id uuid primary key default gen_random_uuid(),
   user_id text not null,
+  name text,
   housing_preference_id uuid references public.housing_preferences(id) on delete cascade,
+  filters jsonb not null default '{}'::jsonb,
   alert_frequency text not null default 'daily',
   min_match_score integer not null default 80,
   enabled boolean not null default true,
+  is_active boolean not null default true,
+  last_run_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+create table if not exists public.housing_saved_listings (
+  id uuid primary key default gen_random_uuid(),
+  user_id text not null,
+  housing_listing_id uuid references public.housing_listings(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique(user_id, housing_listing_id)
 );
 
 create table if not exists public.housing_saved_search_matches (

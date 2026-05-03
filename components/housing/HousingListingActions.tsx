@@ -7,9 +7,24 @@ import type { HousingListing } from '@/lib/housing';
 
 export function HousingListingActions({ listing }: { listing: HousingListing }) {
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  async function saveListing() {
+    setSaveError(null);
+    const res = await fetch(`/api/housing/listings/${listing.id}/save`, { method: 'POST' });
+    if (res.status === 401) {
+      window.location.href = `/auth/signin?next=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+    if (!res.ok) {
+      setSaveError('Could not save this listing yet.');
+      return;
+    }
+    setSaved(true);
+  }
 
   async function generateDraft(language: 'en' | 'zh' = 'en') {
     setBusy(true);
@@ -38,7 +53,7 @@ export function HousingListingActions({ listing }: { listing: HousingListing }) 
     <div className="rounded-[24px] border p-5" style={{ background: 'var(--lt-surface)', borderColor: 'var(--lt-border)' }}>
       <h2 className="mb-3 flex items-center gap-2 text-xl font-black text-white"><MessageSquare className="h-5 w-5 text-pink-300" /> Take action</h2>
       <div className="flex flex-wrap gap-3">
-        <button type="button" onClick={() => setSaved((value) => !value)} className="r-btn-ghost">
+        <button type="button" onClick={saveListing} className="r-btn-ghost">
           {saved ? <Check className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
           {saved ? 'Saved locally' : 'Save listing'}
         </button>
@@ -49,6 +64,7 @@ export function HousingListingActions({ listing }: { listing: HousingListing }) 
         <button type="button" onClick={() => generateDraft('zh')} disabled={busy} className="r-btn-ghost">中文联系模板</button>
         <Link href="/inbox" className="r-btn-ghost">Open Message</Link>
       </div>
+      {saveError && <div className="mt-3 rounded-2xl border border-red-300/20 bg-red-300/10 px-4 py-3 text-sm text-red-100">{saveError}</div>}
       {draft && (
         <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
           <div className="mb-2 flex items-center justify-between gap-3">

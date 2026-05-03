@@ -2,17 +2,15 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { LightPage } from '@/components/LightPage';
 import { HousingListingCard } from '@/components/housing/HousingListingCard';
-import { HOUSING_LISTINGS } from '@/lib/housing';
+import { listHousingListings } from '@/lib/housing/store';
 
 export const dynamic = 'force-dynamic';
 
-export default function HousingListingsPage({ searchParams }: { searchParams?: { borough?: string; maxPrice?: string; verified?: string } }) {
-  const maxPrice = Number(searchParams?.maxPrice || '0');
-  const listings = HOUSING_LISTINGS.filter((listing) => {
-    if (searchParams?.borough && listing.borough !== searchParams.borough) return false;
-    if (maxPrice && listing.price > maxPrice) return false;
-    if (searchParams?.verified === 'true' && !listing.isEduVerifiedPost && listing.verificationStatus !== 'proof_uploaded') return false;
-    return listing.status !== 'removed';
+export default async function HousingListingsPage({ searchParams }: { searchParams?: { borough?: string; maxPrice?: string; verified?: string } }) {
+  const listings = await listHousingListings({
+    borough: searchParams?.borough,
+    maxPrice: Number(searchParams?.maxPrice || '0') || undefined,
+    verifiedOnly: searchParams?.verified === 'true',
   });
 
   return (
