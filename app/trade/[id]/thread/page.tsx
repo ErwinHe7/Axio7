@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Tag, MapPin } from 'lucide-react';
 import { getListing, getTransaction, listMessages } from '@/lib/store';
-import { getCurrentUser } from '@/lib/auth';
+import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { formatCents, timeAgo } from '@/lib/format';
 import { MessageThread } from '@/components/MessageThread';
 import { LightPage } from '@/components/LightPage';
@@ -19,13 +19,14 @@ export default async function ThreadPage({
   const listing = await getListing(params.id);
   if (!listing) return notFound();
   if (!searchParams.tx) return notFound();
-  const [transaction, messages, user] = await Promise.all([
+  const [transaction, user] = await Promise.all([
     getTransaction(searchParams.tx),
-    listMessages(searchParams.tx),
     getCurrentUser(),
   ]);
   if (!transaction) return notFound();
   if (!user.authenticated || !user.id) return notFound();
+  if (!isAdmin(user) && transaction.seller_id !== user.id && transaction.buyer_id !== user.id) return notFound();
+  const messages = await listMessages(searchParams.tx);
 
   return (
     <LightPage>

@@ -939,6 +939,12 @@ export async function getTransaction(id: string): Promise<Transaction | null> {
   return mem().transactions.find((t) => t.id === id) ?? null;
 }
 
+export async function canAccessTransaction(transactionId: string, userId: string, admin = false): Promise<boolean> {
+  if (admin) return true;
+  const transaction = await getTransaction(transactionId);
+  return Boolean(transaction && (transaction.seller_id === userId || transaction.buyer_id === userId));
+}
+
 export async function listMessages(transactionId: string): Promise<Message[]> {
   if (usingDB()) {
     const { data, error } = await supabaseAdmin()
@@ -1094,12 +1100,14 @@ export async function getUnreadCount(userId: string): Promise<number> {
   return count ?? 0;
 }
 
-export async function markNotificationRead(notificationId: string): Promise<void> {
+export async function markNotificationRead(notificationId: string, userId?: string): Promise<void> {
   if (!usingDB()) return;
-  await supabaseAdmin()
+  let query = supabaseAdmin()
     .from('notifications')
     .update({ read: true })
     .eq('id', notificationId);
+  if (userId) query = query.eq('user_id', userId);
+  await query;
 }
 
 export async function markAllNotificationsRead(userId: string): Promise<void> {

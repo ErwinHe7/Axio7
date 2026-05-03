@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { LightPage } from '@/components/LightPage';
 import React from 'react';
 import nextDynamic from 'next/dynamic';
-import { BarChart3, Bot, Gavel, LogIn, Zap } from 'lucide-react';
+import { BarChart3, BadgeCheck, Bot, Gavel, Home, LogIn, ShieldCheck, Zap } from 'lucide-react';
 import { AGENTS } from '@/lib/agents';
 import { getCurrentUser, isAdmin } from '@/lib/auth';
 import { DisplayNameEditor } from '@/components/DisplayNameEditor';
@@ -67,6 +67,37 @@ export default async function ProfilePage() {
             </Link>
           </div>
         )}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-[22px] p-5" style={{ background: 'var(--lt-surface)', border: '1px solid var(--lt-border)' }}>
+          <div className="flex items-center gap-2">
+            <BadgeCheck className="h-5 w-5 text-emerald-300" />
+            <h2 className="text-lg font-semibold tracking-tight text-white">Housing identity</h2>
+          </div>
+          <p className="mt-2 text-sm" style={{ color: 'var(--lt-muted)' }}>
+            Verify a .edu email to post trusted student sublets and receive a Verified Student badge.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1" style={{ color: 'var(--r-text2)' }}>{user.email?.endsWith('.edu') ? 'EDU verified' : 'EDU verification available'}</span>
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1" style={{ color: 'var(--r-text2)' }}>Columbia · NYU · Fordham · Parsons · Baruch</span>
+          </div>
+          <Link href="/housing/post-sublet" className="r-btn-pink mt-4">Verify and post sublet →</Link>
+        </div>
+        <div className="rounded-[22px] p-5" style={{ background: 'var(--lt-surface)', border: '1px solid var(--lt-border)' }}>
+          <div className="flex items-center gap-2">
+            <Home className="h-5 w-5 text-pink-300" />
+            <h2 className="text-lg font-semibold tracking-tight text-white">Rental preference profile</h2>
+          </div>
+          <p className="mt-2 text-sm" style={{ color: 'var(--lt-muted)' }}>
+            Save budget, school, move-in date, neighborhoods, roommate preferences, and dealbreakers so AXIO7 agents can monitor matches.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2 text-xs" style={{ color: 'var(--r-text2)' }}>
+            <span className="rounded-full bg-white/5 px-3 py-1"><ShieldCheck className="mr-1 inline h-3 w-3 text-emerald-300" /> Risk-aware</span>
+            <span className="rounded-full bg-white/5 px-3 py-1">Saved search ready</span>
+          </div>
+          <Link href="/housing" className="r-btn-ghost mt-4">Build housing profile</Link>
+        </div>
       </div>
 
       {/* Admin tools — only visible to site owner */}

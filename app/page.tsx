@@ -28,21 +28,22 @@ export default function MarketingPage() {
           <div className="r-hero-inner">
             <div className="r-hero-badge sr">
               <span className="badge-pip"><span className="badge-dot" />LIVE</span>
-              Columbia · NYC · Est. 2026 · 7 AI Agents
+NYC Housing · Verified Sublets · Risk-Checked Agents
             </div>
             <h1 className="sr sr-d1">
-              Everything Columbia &amp; NYC,<br />
-              <span className="r-serif">answered by</span> <span className="r-grad">agents</span><span className="r-cursor-mark" />
+              Find housing in NYC<br />
+              <span className="r-serif">with AI</span> <span className="r-grad">agents</span><span className="r-cursor-mark" />
             </h1>
             <p className="r-hero-sub sr sr-d2">
-              Sublets, events, roommates, NYC intel — without digging through 20 group chats. Seven AI models. One feed.
+              Verified student sublets, building availability, neighborhood intelligence, roommate matching, and safer rental decisions — built for Columbia, NYU, and NYC newcomers.
             </p>
             <div className="sr sr-d3" style={{ width: '100%', maxWidth: 720 }}>
               <MarketingTerminal />
             </div>
             <div className="r-hero-ctas sr sr-d4">
-              <Link href="/ask" className="r-btn-pink">Ask AXIO7 <span>→</span></Link>
-              <a href="#feed" className="r-btn-ghost">Browse Feed</a>
+              <Link href="/housing" className="r-btn-pink">Start finding housing <span>→</span></Link>
+              <Link href="/housing/post-sublet" className="r-btn-ghost">Post a verified sublet</Link>
+              <Link href="/housing/neighborhoods" className="r-btn-ghost">Explore neighborhoods</Link>
             </div>
           </div>
         </section>
@@ -51,39 +52,39 @@ export default function MarketingPage() {
 
         <section className="r-sec">
           <div className="r-sec-in">
-            <div className="r-s-lbl sr">What AXIO7 does</div>
-            <h2 className="r-s-ttl sr sr-d1">One ask. <em>Seven</em> answers.</h2>
-            <p className="r-s-body sr sr-d2">Post anything — sublets, events, roommates, founders. Seven AI models respond simultaneously, each bringing a distinct lens.</p>
+            <div className="r-s-lbl sr">AXIO7 Housing workflow</div>
+            <h2 className="r-s-ttl sr sr-d1">One profile. <em>Eight</em> housing agents.</h2>
+            <p className="r-s-body sr sr-d2">Tell AXIO7 your budget, school, move-in date, commute tolerance, and roommate preferences. Agents collect, normalize, rank, risk-check, draft outreach, and monitor new matches.</p>
             <div className="r-bento sr sr-d3">
               <div className="gc r-bc r-bc-hero b7">
                 <div className="r-bc-tag">Core</div>
                 <div className="r-bc-icon">⚡</div>
-                <div className="r-bc-ttl">7-model fan-out</div>
-                <div className="r-bc-body">Every question routes to GPT, Claude, DeepSeek, Gemini, Grok, Qwen, and Nvidia at once. Compare answers side-by-side and pick the lens that fits.</div>
+                <div className="r-bc-ttl">AI rental matching</div>
+                <div className="r-bc-body">Intake, collector, neighborhood, matching, risk, roommate, communication, and monitoring agents work from one structured housing profile.</div>
               </div>
               <div className="gc r-bc b5">
-                <div className="r-bc-tag">Housing</div>
-                <div className="r-bc-icon">🏠</div>
-                <div className="r-bc-ttl">Sublets &amp; roommates</div>
-                <div className="r-bc-body">Listings near Columbia ranked by price, proximity, timeline. No spam, no group-chat noise.</div>
+                <div className="r-bc-tag">Verified</div>
+                <div className="r-bc-icon">🎓</div>
+                <div className="r-bc-ttl">Student sublets</div>
+                <div className="r-bc-body">.edu verification, proof-upload status, sublet permission checks, and private contact flow for Columbia, NYU, Fordham, Parsons, and Baruch renters.</div>
               </div>
               <div className="gc r-bc b4">
                 <div className="r-bc-num">→ 03</div>
                 <div className="r-bc-icon">🔒</div>
-                <div className="r-bc-ttl">Private connect</div>
-                <div className="r-bc-body">Tap &ldquo;I want this&rdquo; — intros by email. No contact info ever public.</div>
+                <div className="r-bc-ttl">Risk &amp; scam detection</div>
+                <div className="r-bc-body">Agents flag below-market prices, vague addresses, missing lease proof, deposit pressure, duplicate photos, and unclear sublet permission.</div>
               </div>
               <div className="gc r-bc b4">
                 <div className="r-bc-num">→ 04</div>
                 <div className="r-bc-icon">🗽</div>
-                <div className="r-bc-ttl">NYC intel</div>
-                <div className="r-bc-body">Events, deals, dining — agents surface what&apos;s actually worth your time.</div>
+                <div className="r-bc-ttl">Neighborhood intelligence</div>
+                <div className="r-bc-body">Understand Morningside, UWS, LIC, Astoria, Williamsburg, Jersey City, Hoboken, commute tradeoffs, and newcomer fit.</div>
               </div>
               <div className="gc r-bc b4">
                 <div className="r-bc-num">→ 05</div>
                 <div className="r-bc-icon">💼</div>
-                <div className="r-bc-ttl">Founders &amp; builders</div>
-                <div className="r-bc-body">Find co-founders in the Columbia network. Agents match context to people.</div>
+                <div className="r-bc-ttl">Outreach + monitoring</div>
+                <div className="r-bc-body">Generate Chinese/English messages, ask the right lease questions, save searches, and get alerted when high-match listings appear.</div>
               </div>
             </div>
           </div>

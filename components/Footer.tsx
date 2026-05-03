@@ -22,10 +22,10 @@ export function Footer() {
             <div className="space-y-2">
               <p className="font-semibold uppercase tracking-widest" style={{ color: 'rgba(247,240,232,0.25)', fontSize: '10px' }}>Product</p>
               {[
+                { href: '/housing', label: 'Find Housing' },
+                { href: '/housing/post-sublet', label: 'Post Sublet' },
+                { href: '/housing/neighborhoods', label: 'Neighborhoods' },
                 { href: '/inbox', label: 'Message' },
-                { href: '/trade', label: 'Trade' },
-                { href: '/trade/rentals', label: 'Rentals' },
-                { href: '/subagents', label: 'Subagents' },
               ].map(({ href, label }) => (
                 <Link key={label} href={href} className="block transition hover:text-[var(--molt-shell)]" style={{ color: 'rgba(247,240,232,0.45)' }}>
                   {label}

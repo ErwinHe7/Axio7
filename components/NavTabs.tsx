@@ -2,12 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, MessageSquare, ShoppingBag, User } from 'lucide-react';
+import { Home, House, Map, MessageSquare, User, Users } from 'lucide-react';
 
 const tabs = [
   { href: '/', label: 'Home', icon: Home, match: (path: string) => path === '/' },
-  { href: '/trade', label: 'Trade', icon: ShoppingBag, match: (path: string) => path.startsWith('/trade') },
-  { href: '/inbox', label: 'Message', icon: MessageSquare, match: (path: string) => path.startsWith('/inbox') },
+  { href: '/housing', label: 'Find Housing', icon: House, match: (path: string) => path === '/housing' || path.startsWith('/housing/listings') || path.startsWith('/housing/matches') || path.startsWith('/housing/saved') },
+  { href: '/housing/post-sublet', label: 'Post Sublet', icon: House, match: (path: string) => path.startsWith('/housing/post-sublet') },
+  { href: '/housing/roommates', label: 'Roommates', icon: Users, match: (path: string) => path.startsWith('/housing/roommates') },
+  { href: '/housing/neighborhoods', label: 'Neighborhoods', icon: Map, match: (path: string) => path.startsWith('/housing/neighborhoods') },
+  { href: '/inbox', label: 'Message', icon: MessageSquare, match: (path: string) => path.startsWith('/inbox') || path.startsWith('/messages') },
   { href: '/profile', label: 'Profile', icon: User, match: (path: string) => path.startsWith('/profile') },
 ];
 
