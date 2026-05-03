@@ -195,12 +195,36 @@ body:has(.app-neon-page) ::selection { background: var(--r-pink); color: #fff; }
 .app-neon-page h2,
 .app-neon-page h3,
 .app-neon-page h4 { color: var(--r-text); }
-.app-neon-page p,
-.app-neon-page li,
-.app-neon-page span,
-.app-neon-page label { color: inherit; }
 .app-neon-page [style*="var(--lt-surface)"] {
   box-shadow: 0 18px 60px rgba(0,0,0,0.28), 0 0 34px rgba(255,62,197,0.08);
+}
+.app-neon-page .bg-violet-50,
+.app-neon-page .bg-sky-50,
+.app-neon-page .bg-rose-50,
+.app-neon-page .bg-emerald-50,
+.app-neon-page .bg-amber-50,
+.app-neon-page .bg-orange-50,
+.app-neon-page .bg-blue-50,
+.app-neon-page .bg-slate-50 {
+  color: #111827;
+}
+.app-neon-page .bg-violet-50 p,
+.app-neon-page .bg-sky-50 p,
+.app-neon-page .bg-rose-50 p,
+.app-neon-page .bg-emerald-50 p,
+.app-neon-page .bg-amber-50 p,
+.app-neon-page .bg-orange-50 p,
+.app-neon-page .bg-blue-50 p,
+.app-neon-page .bg-slate-50 p,
+.app-neon-page .bg-violet-50 span,
+.app-neon-page .bg-sky-50 span,
+.app-neon-page .bg-rose-50 span,
+.app-neon-page .bg-emerald-50 span,
+.app-neon-page .bg-amber-50 span,
+.app-neon-page .bg-orange-50 span,
+.app-neon-page .bg-blue-50 span,
+.app-neon-page .bg-slate-50 span {
+  color: inherit;
 }
 .app-neon-page a[style*="var(--molt-shell)"],
 .app-neon-page button[style*="var(--molt-shell)"] {
@@ -309,11 +333,11 @@ body:has(.app-neon-page) ::selection { background: var(--r-pink); color: #fff; }
 .nav-mark img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
 .nav-word { font-family: var(--r-mono); font-size: 14px; font-weight: 700; letter-spacing: 0.06em; }
 .nav-beta { font-family: var(--r-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--r-pink2); background: rgba(255,62,197,0.12); border: 1px solid rgba(255,62,197,0.3); border-radius: 4px; padding: 2px 7px; margin-left: 2px; }
-.nav-pill { display: flex; align-items: center; gap: 2px; background: rgba(255,255,255,0.04); border: 1px solid var(--r-border2); border-radius: 14px; padding: 4px; backdrop-filter: blur(20px); }
-.nav-pill a { display: inline-flex; align-items: center; gap: 7px; color: var(--r-text2); text-decoration: none; font-size: 13.5px; font-weight: 600; letter-spacing: -0.005em; padding: 9px 16px; border-radius: 10px; transition: all 0.2s; position: relative; }
-.nav-pill a svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: 0.8; }
-.nav-pill a:hover { color: var(--r-text); background: rgba(255,255,255,0.04); }
-.nav-pill a.active { color: #fff; background: linear-gradient(135deg,rgba(255,62,197,0.32),rgba(138,61,240,0.28)); box-shadow: 0 0 0 1px rgba(255,62,197,0.45) inset,0 6px 22px rgba(255,62,197,0.35); }
+.nav-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.045); border: 1px solid rgba(255,255,255,0.13); border-radius: 18px; padding: 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03), 0 0 34px rgba(255,62,197,0.08); backdrop-filter: blur(20px); }
+.nav-pill a { position: relative; display: inline-flex; min-height: 48px; align-items: center; gap: 10px; border-radius: 14px; padding: 0 18px; color: var(--r-text2); text-decoration: none; font-size: 14px; font-weight: 800; letter-spacing: -0.01em; transition: transform 0.2s, background 0.2s, color 0.2s, box-shadow 0.2s; }
+.nav-pill a svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; opacity: 0.9; }
+.nav-pill a:hover { color: #fff; background: rgba(255,255,255,0.055); transform: translateY(-1px); }
+.nav-pill a.active { color: #fff; background: linear-gradient(135deg,rgba(255,62,197,0.34),rgba(138,61,240,0.3)); box-shadow: 0 0 0 1px rgba(255,62,197,0.48) inset, 0 8px 28px rgba(255,62,197,0.34); }
 .nav-links { display: flex; align-items: center; gap: 14px; }
 .nav-cta { background: linear-gradient(135deg,var(--r-pink),var(--r-violet)) !important; color: #fff !important; border-radius: 10px !important; padding: 8px 18px !important; font-weight: 700 !important; text-decoration: none; box-shadow: 0 0 0 1px rgba(255,255,255,0.1) inset,0 4px 24px rgba(255,62,197,0.45) !important; transition: all 0.2s !important; }
 .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset,0 6px 32px rgba(255,62,197,0.6) !important; }

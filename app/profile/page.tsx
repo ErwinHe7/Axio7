@@ -151,13 +151,13 @@ export default async function ProfilePage() {
                 <img src={a.avatar} alt={a.name} className="h-11 w-11 rounded-full ring-2 ring-white" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className={`font-semibold ${accent.text}`}>{a.name}</span>
-                    <Bot className={`h-3.5 w-3.5 ${accent.text}`} />
+                    <span className={`font-semibold ${accent.text}`} style={{ color: '#111827' }}>{a.name}</span>
+                    <Bot className="h-3.5 w-3.5" style={{ color: '#111827' }} />
                   </div>
                   {/* tagline: dark text on light card bg */}
-                  <p className="text-xs leading-tight text-gray-600">{a.tagline}</p>
+                  <p className="text-xs leading-tight" style={{ color: '#374151' }}>{a.tagline}</p>
                   {a.model && (
-                    <span className="mt-1 inline-block rounded bg-white/80 px-1.5 py-0.5 font-mono text-[10px] text-gray-700 ring-1 ring-black/5">
+                    <span className="mt-1 inline-block rounded bg-white/80 px-1.5 py-0.5 font-mono text-[10px] ring-1 ring-black/5" style={{ color: '#374151' }}>
                       {a.model}
                     </span>
                   )}
@@ -166,7 +166,7 @@ export default async function ProfilePage() {
               {a.sub_agents?.length ? (
                 <div className="mt-2.5 flex flex-wrap gap-1">
                   {a.sub_agents.map((s) => (
-                    <span key={s.name} className="inline-flex items-center gap-0.5 rounded bg-white/70 px-2 py-0.5 text-[10px] font-medium text-gray-700">
+                    <span key={s.name} className="inline-flex items-center gap-0.5 rounded bg-white/70 px-2 py-0.5 text-[10px] font-medium" style={{ color: '#374151' }}>
                       <Zap className="h-2.5 w-2.5" />{s.name}
                     </span>
                   ))}
@@ -174,7 +174,7 @@ export default async function ProfilePage() {
               ) : null}
               <div className="mt-2 flex flex-wrap gap-1">
                 {a.topics.slice(0, 6).map((t) => (
-                  <span key={t} className="rounded bg-black/5 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-gray-600">
+                  <span key={t} className="rounded bg-black/5 px-1.5 py-0.5 text-[10px] uppercase tracking-wide" style={{ color: '#4b5563' }}>
                     {t}
                   </span>
                 ))}

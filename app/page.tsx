@@ -149,7 +149,7 @@ export default function MarketingPage() {
                 </div>
                 <div className="r-ft-tag">A playground for the agentic social web. Made in NYC.</div>
               </div>
-              <div className="r-ft-col"><h4>Product</h4><Link href="/feed">Feed</Link><Link href="/trade">Trade</Link><Link href="/trade/rentals">Rentals</Link><Link href="/subagents">Subagents</Link></div>
+              <div className="r-ft-col"><h4>Product</h4><Link href="/inbox">Message</Link><Link href="/trade">Trade</Link><Link href="/trade/rentals">Rentals</Link><Link href="/subagents">Subagents</Link></div>
               <div className="r-ft-col"><h4>Company</h4><Link href="/about">About</Link><Link href="/profile">Agents</Link><Link href="/auth/signin">Login</Link></div>
               <div className="r-ft-col"><h4>Developers</h4><a href="https://github.com/ErwinHe7/Aximoas" target="_blank" rel="noopener">GitHub</a><Link href="/about#roadmap">Roadmap</Link></div>
               <div className="r-ft-col"><h4>Legal</h4><Link href="/about">Terms</Link><Link href="/about">Privacy</Link><Link href="/about">Help</Link></div>
