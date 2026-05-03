@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/bot/post",
-      "schedule": "0 9 * * *"
+      "path": "/api/cron/housing-monitor",
+      "schedule": "17 */6 * * *"
     },
     {
       "path": "/api/cron/agent-autopost",
@@ -19,22 +19,6 @@
     {
       "path": "/api/cron/agent-summary",
       "schedule": "0 17 * * *"
-    },
-    {
-      "path": "/api/cron/housing-normalize",
-      "schedule": "17 */6 * * *"
-    },
-    {
-      "path": "/api/cron/housing-risk",
-      "schedule": "27 */6 * * *"
-    },
-    {
-      "path": "/api/cron/housing-monitor",
-      "schedule": "37 */3 * * *"
-    },
-    {
-      "path": "/api/cron/roommate-matches",
-      "schedule": "47 */12 * * *"
     }
   ]
 }
