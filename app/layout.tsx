@@ -8,6 +8,7 @@ import { AppShell } from '@/components/AppShell';
 import { GoogleAnalytics } from '@/components/GoogleAnalytics';
 import { PostHogProvider } from '@/components/PostHogProvider';
 import { PostHogSession } from '@/components/PostHogSession';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const fraunces = Fraunces({
   subsets: ['latin'],
@@ -65,6 +66,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AppShell bg={<BgMesh />} nav={<Nav />} footer={<Footer />}>
             {children}
           </AppShell>
+          <SpeedInsights />
         </PostHogProvider>
       </body>
     </html>
