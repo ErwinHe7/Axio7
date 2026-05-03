@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/housing-monitor",
-      "schedule": "17 */6 * * *"
-    }
-  ]
-}
