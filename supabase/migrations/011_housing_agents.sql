@@ -218,5 +218,6 @@ create index if not exists housing_listings_borough_idx on public.housing_listin
 create index if not exists housing_listings_price_idx on public.housing_listings(monthly_rent_cents);
 create index if not exists housing_preferences_user_idx on public.housing_preferences(user_id);
 create index if not exists housing_saved_searches_user_idx on public.housing_saved_searches(user_id);
+create unique index if not exists roommate_profiles_user_unique_idx on public.roommate_profiles(user_id);
 create index if not exists roommate_profiles_user_idx on public.roommate_profiles(user_id);
 create index if not exists agent_runs_user_idx on public.agent_runs(user_id);

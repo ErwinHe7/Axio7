@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getCurrentUser } from '@/lib/auth';
+import { getRoommateProfile, upsertRoommateProfile } from '@/lib/housing/store';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,7 +22,8 @@ const Input = z.object({
 export async function GET() {
   const user = await getCurrentUser();
   if (!user.authenticated) return NextResponse.json({ profile: null });
-  return NextResponse.json({ profile: null, persisted: false });
+  const profile = await getRoommateProfile(user.id);
+  return NextResponse.json({ profile, persisted: Boolean(profile) });
 }
 
 export async function PUT(req: Request) {
@@ -30,5 +32,11 @@ export async function PUT(req: Request) {
   const json = await req.json().catch(() => null);
   const parsed = Input.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: 'invalid input', issues: parsed.error.flatten() }, { status: 400 });
-  return NextResponse.json({ profile: { id: `rm-${user.id}`, userId: user.id, name: user.name, verified: String(user.email ?? '').endsWith('.edu'), ...parsed.data }, persisted: false });
+  const draft = { id: `rm-${user.id}`, userId: user.id, name: user.name, verified: String(user.email ?? '').endsWith('.edu'), ...parsed.data };
+  try {
+    const profile = await upsertRoommateProfile(user.id, draft);
+    return NextResponse.json({ profile, persisted: true });
+  } catch (err: any) {
+    return NextResponse.json({ profile: draft, persisted: false, warning: err?.message ?? 'Supabase unavailable' });
+  }
 }

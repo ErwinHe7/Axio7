@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { HousingPreferenceSchema } from '@/lib/housing';
 import { parseHousingNeed } from '@/lib/housing/agents';
+import { getHousingPreference, upsertHousingPreference } from '@/lib/housing/store';
 import { getCurrentUser } from '@/lib/auth';
 
 export const runtime = 'nodejs';
@@ -9,6 +10,8 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   const user = await getCurrentUser();
   if (!user.authenticated) return NextResponse.json({ preference: null });
+  const persisted = await getHousingPreference(user.id);
+  if (persisted) return NextResponse.json({ preference: persisted, persisted: true });
   return NextResponse.json({ preference: HousingPreferenceSchema.parse({ userId: user.id, schoolEmail: user.email ?? '' }), persisted: false });
 }
 
@@ -20,5 +23,11 @@ export async function PUT(req: Request) {
     ? { success: true as const, data: parseHousingNeed(json.rawText) }
     : HousingPreferenceSchema.safeParse({ ...json, userId: user.id });
   if (!parsed.success) return NextResponse.json({ error: 'invalid input', issues: parsed.error.flatten() }, { status: 400 });
-  return NextResponse.json({ preference: { ...parsed.data, userId: user.id, schoolEmail: parsed.data.schoolEmail || user.email || '' }, persisted: false });
+  const preference = { ...parsed.data, userId: user.id, schoolEmail: parsed.data.schoolEmail || user.email || '' };
+  try {
+    const saved = await upsertHousingPreference(user.id, preference);
+    return NextResponse.json({ preference: saved, persisted: true });
+  } catch (err: any) {
+    return NextResponse.json({ preference, persisted: false, warning: err?.message ?? 'Supabase unavailable' });
+  }
 }

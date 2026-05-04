@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { isSupabaseConfigured, supabaseAdmin } from '@/lib/supabase';
-import type { AgentRunRecord, HousingListing, HousingPreference, HousingRiskAssessment } from './types';
+import type { AgentRunRecord, HousingListing, HousingPreference, HousingRiskAssessment, RoommateProfile } from './types';
 import { HOUSING_LISTINGS } from './data';
 
 function usingDB() {
@@ -201,6 +201,177 @@ function filterListings(listings: HousingListing[], filters: { borough?: string;
     if (filters.verifiedOnly && !listing.isEduVerifiedPost && !['edu_verified', 'proof_uploaded', 'admin_verified'].includes(listing.verificationStatus)) return false;
     return listing.status !== 'removed';
   });
+}
+
+function rowToPreference(row: any): HousingPreference {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    school: row.school,
+    schoolEmail: row.school_email ?? '',
+    budgetMin: row.budget_min,
+    budgetMax: row.budget_max,
+    moveInDate: row.move_in_date ?? 'Flexible',
+    leaseTerm: row.lease_term,
+    preferredBoroughs: row.preferred_boroughs ?? [],
+    preferredNeighborhoods: row.preferred_neighborhoods ?? [],
+    maxCommuteMinutes: row.max_commute_minutes,
+    commuteTarget: row.commute_target ?? 'Columbia University',
+    roomType: row.room_type,
+    acceptRoommates: row.accept_roommates,
+    genderPreference: row.gender_preference ?? undefined,
+    lifestyle: row.lifestyle ?? {},
+    mustHave: row.must_have ?? [],
+    niceToHave: row.nice_to_have ?? [],
+    dealBreakers: row.deal_breakers ?? [],
+    rawText: row.raw_text ?? undefined,
+    parsedConfidence: Number(row.parsed_confidence ?? 0.75),
+  };
+}
+
+function preferenceToRow(userId: string, preference: HousingPreference) {
+  return {
+    user_id: userId,
+    school: preference.school,
+    school_email: preference.schoolEmail || null,
+    budget_min: preference.budgetMin,
+    budget_max: preference.budgetMax,
+    move_in_date: preference.moveInDate,
+    lease_term: preference.leaseTerm,
+    preferred_boroughs: preference.preferredBoroughs,
+    preferred_neighborhoods: preference.preferredNeighborhoods,
+    max_commute_minutes: preference.maxCommuteMinutes,
+    commute_target: preference.commuteTarget,
+    room_type: preference.roomType,
+    accept_roommates: preference.acceptRoommates,
+    gender_preference: preference.genderPreference ?? null,
+    lifestyle: preference.lifestyle,
+    must_have: preference.mustHave,
+    nice_to_have: preference.niceToHave,
+    deal_breakers: preference.dealBreakers,
+    raw_text: preference.rawText ?? null,
+    parsed_confidence: preference.parsedConfidence,
+    updated_at: new Date().toISOString(),
+  };
+}
+
+export async function getHousingPreference(userId: string): Promise<HousingPreference | null> {
+  if (!usingDB()) return null;
+  const { data, error } = await supabaseAdmin()
+    .from('housing_preferences')
+    .select('*')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+  return rowToPreference(data);
+}
+
+export async function upsertHousingPreference(userId: string, preference: HousingPreference): Promise<HousingPreference> {
+  if (!usingDB()) return { ...preference, userId };
+  const existing = await getHousingPreference(userId);
+  const row = preferenceToRow(userId, preference);
+  const query = existing
+    ? supabaseAdmin().from('housing_preferences').update(row).eq('id', existing.id).select('*').single()
+    : supabaseAdmin().from('housing_preferences').insert(row).select('*').single();
+  const { data, error } = await query;
+  if (error) throw error;
+  return rowToPreference(data);
+}
+
+function rowToRoommateProfile(row: any): RoommateProfile {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name ?? 'Roommate seeker',
+    school: row.school,
+    budget: row.budget_max ?? row.budget ?? 0,
+    moveInDate: row.move_in_date ?? 'Flexible',
+    preferredNeighborhoods: row.preferred_neighborhoods ?? [],
+    sleepSchedule: row.sleep_schedule ?? 'flexible',
+    cleanliness: row.cleanliness ?? 'clean',
+    noiseTolerance: row.noise_tolerance ?? 'moderate',
+    socialLevel: row.social_level ?? 'balanced',
+    cookingFrequency: row.cooking_frequency ?? 'sometimes',
+    intro: row.intro ?? '',
+    verified: row.verified ?? false,
+  };
+}
+
+export async function getRoommateProfile(userId: string): Promise<RoommateProfile | null> {
+  if (!usingDB()) return null;
+  const { data, error } = await supabaseAdmin().from('roommate_profiles').select('*').eq('user_id', userId).eq('visible', true).maybeSingle();
+  if (error || !data) return null;
+  return rowToRoommateProfile(data);
+}
+
+export async function upsertRoommateProfile(userId: string, profile: Partial<RoommateProfile> & { name?: string }): Promise<RoommateProfile> {
+  if (!usingDB()) {
+    return {
+      id: `rm-${userId}`,
+      userId,
+      name: profile.name ?? 'Roommate seeker',
+      school: profile.school ?? 'Columbia',
+      budget: profile.budget ?? 1800,
+      moveInDate: profile.moveInDate ?? 'Flexible',
+      preferredNeighborhoods: profile.preferredNeighborhoods ?? [],
+      sleepSchedule: profile.sleepSchedule ?? 'flexible',
+      cleanliness: profile.cleanliness ?? 'clean',
+      noiseTolerance: profile.noiseTolerance ?? 'moderate',
+      socialLevel: profile.socialLevel ?? 'balanced',
+      cookingFrequency: profile.cookingFrequency ?? 'sometimes',
+      intro: profile.intro ?? '',
+      verified: profile.verified ?? false,
+    };
+  }
+  const row = {
+    user_id: userId,
+    name: profile.name ?? 'Roommate seeker',
+    school: profile.school ?? 'Columbia',
+    budget: profile.budget ?? 1800,
+    move_in_date: profile.moveInDate ?? null,
+    preferred_neighborhoods: profile.preferredNeighborhoods ?? [],
+    sleep_schedule: profile.sleepSchedule ?? null,
+    cleanliness: profile.cleanliness ?? null,
+    noise_tolerance: profile.noiseTolerance ?? null,
+    social_level: profile.socialLevel ?? null,
+    cooking_frequency: profile.cookingFrequency ?? null,
+    intro: profile.intro ?? null,
+    verified: profile.verified ?? false,
+    visible: true,
+    updated_at: new Date().toISOString(),
+  };
+  const { data, error } = await supabaseAdmin()
+    .from('roommate_profiles')
+    .upsert(row, { onConflict: 'user_id' })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return rowToRoommateProfile(data);
+}
+
+export async function getSavedSearch(userId: string, savedSearchId: string) {
+  if (!usingDB()) return null;
+  const { data, error } = await supabaseAdmin()
+    .from('housing_saved_searches')
+    .select('*')
+    .eq('id', savedSearchId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) return null;
+  return data;
+}
+
+export async function recordSavedSearchRun(savedSearchId: string, matches: { listingId: string; score: number }[]) {
+  if (!usingDB()) return;
+  await supabaseAdmin().from('housing_saved_searches').update({ last_run_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq('id', savedSearchId);
+  if (matches.length) {
+    await supabaseAdmin().from('housing_saved_search_matches').upsert(
+      matches.map((match) => ({ saved_search_id: savedSearchId, housing_listing_id: match.listingId, match_score: match.score })),
+      { onConflict: 'saved_search_id,housing_listing_id' }
+    );
+  }
 }
 
 export function buildDraftHousingListing(input: any, user: { id: string; name: string; email?: string | null }): HousingListing {
