@@ -13,52 +13,42 @@ export async function Nav() {
   ]);
 
   return (
-    <header className="app-topbar sticky top-0 z-30">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:py-4">
-        <Link href="/" className="app-topbar-logo">
-          <span className="app-topbar-mark">
-            <img src="/axio7-logo.png" alt="AXIO7" />
-          </span>
-          <span className="hidden font-mono text-sm font-black tracking-[0.18em] text-white sm:inline">AXIO7</span>
-        </Link>
+    <header className="r-nav scrolled">
+      <Link href="/" className="nav-logo" aria-label="AXIO7 home">
+        <span className="nav-mark">
+          <img src="/axio7-logo.png" alt="AXIO7" />
+        </span>
+        <span className="nav-word">AXIO7</span>
+        <span className="nav-beta">BETA</span>
+      </Link>
 
-        <nav className="flex min-w-0 items-center gap-3 text-sm">
-          <NavTabs unreadMessages={unreadMessages} />
+      <nav className="nav-links">
+        <NavTabs unreadMessages={unreadMessages} />
 
-          {/* Admin link — only visible to site owner */}
-          {admin && (
-            <Link
-              href="/admin/agents"
-              className="nav-item group relative inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors"
-              title="Admin"
-            >
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Admin</span>
-              <span
-                className="absolute bottom-0.5 left-1/2 h-px w-4/5 origin-center -translate-x-1/2 scale-x-0 transition-transform duration-200 group-hover:scale-x-100"
-                style={{ background: 'var(--molt-shell)' }}
-              />
-            </Link>
-          )}
+        {admin && (
+          <Link href="/admin/agents" className="nav-admin-link" title="Admin">
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">Admin</span>
+          </Link>
+        )}
 
-          <BellButton authenticated={user.authenticated} />
+        <BellButton authenticated={user.authenticated} />
 
-          {user.authenticated ? (
-            <UserChip user={user} />
-          ) : (
-            <Link href="/auth/signin" className="app-signin-btn">
-              <LogIn className="h-4 w-4" /> Sign in
-            </Link>
-          )}
-        </nav>
-      </div>
+        {user.authenticated ? (
+          <UserChip user={user} />
+        ) : (
+          <Link href="/auth/signin" className="nav-cta">
+            <LogIn className="h-4 w-4" /> Sign in -&gt;
+          </Link>
+        )}
+      </nav>
     </header>
   );
 }
 
 function UserChip({ user }: { user: { name: string; avatar: string | null } }) {
   return (
-    <div className="ml-2 flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.06] px-2.5 py-1.5 shadow-[0_0_20px_rgba(255,62,197,0.12)] backdrop-blur-xl">
+    <div className="nav-user-chip">
       {user.avatar ? (
         <img src={user.avatar} alt="" className="h-6 w-6 rounded-full" />
       ) : (

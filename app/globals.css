@@ -125,9 +125,8 @@ body::before {
   --r-serif: var(--font-instrument-serif), Georgia, serif;
 }
 
-/* Body-level overrides for the marketing home — :has() switches palette
-   without depending on JS hydration. AppShell already strips shared Nav/
-   Footer/main wrapper, so we only need to swap the warm gold backdrop. */
+/* Body-level overrides for the marketing home: :has() switches palette
+   without depending on JS hydration. */
 html:has(.r-page) { scroll-behavior: smooth; }
 body:has(.r-page) {
   background: var(--r-bg) !important;
@@ -339,6 +338,32 @@ body:has(.app-neon-page) ::selection { background: var(--r-pink); color: #fff; }
 .nav-pill a:hover { color: #fff; background: rgba(255,255,255,0.055); transform: translateY(-1px); }
 .nav-pill a.active { color: #fff; background: linear-gradient(135deg,rgba(255,62,197,0.34),rgba(138,61,240,0.3)); box-shadow: 0 0 0 1px rgba(255,62,197,0.48) inset, 0 8px 28px rgba(255,62,197,0.34); }
 .nav-links { display: flex; align-items: center; gap: 14px; }
+.nav-admin-link {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 7px;
+  border-radius: 12px;
+  padding: 0 12px;
+  color: var(--r-text2);
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+.nav-admin-link:hover { color: #fff; background: rgba(255,255,255,0.055); transform: translateY(-1px); }
+.nav-user-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+  padding: 0 10px;
+  box-shadow: 0 0 20px rgba(255,62,197,0.12);
+  backdrop-filter: blur(18px);
+}
 .nav-cta { background: linear-gradient(135deg,var(--r-pink),var(--r-violet)) !important; color: #fff !important; border-radius: 10px !important; padding: 8px 18px !important; font-weight: 700 !important; text-decoration: none; box-shadow: 0 0 0 1px rgba(255,255,255,0.1) inset,0 4px 24px rgba(255,62,197,0.45) !important; transition: all 0.2s !important; }
 .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px rgba(255,255,255,0.15) inset,0 6px 32px rgba(255,62,197,0.6) !important; }
 
@@ -501,8 +526,9 @@ body:has(.app-neon-page) ::selection { background: var(--r-pink); color: #fff; }
 .r-ft-col a:hover { color: var(--r-pink2); }
 .r-ft-bot { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-top: 28px; border-top: 1px solid var(--r-border); font-size: 11px; color: var(--r-text3); font-family: var(--r-mono); }
 
-.sr { opacity: 0; transform: translateY(18px); transition: opacity 0.5s ease, transform 0.5s ease; }
-.sr.in { opacity: 1; transform: none; }
+.sr { opacity: 1; transform: none; transition: opacity 0.5s ease, transform 0.5s ease; }
+.reveal-ready .sr { opacity: 0; transform: translateY(18px); }
+.reveal-ready .sr.in { opacity: 1; transform: none; }
 .sr-d1{transition-delay:0.08s}.sr-d2{transition-delay:0.16s}.sr-d3{transition-delay:0.24s}.sr-d4{transition-delay:0.32s}
 
 @media (max-width: 860px) {
@@ -510,9 +536,13 @@ body:has(.app-neon-page) ::selection { background: var(--r-pink); color: #fff; }
   .r-demo-layout { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) {
-  .nav-pill { display: none; }
+  .nav-pill { max-width: calc(100vw - 174px); overflow-x: auto; scrollbar-width: none; }
+  .nav-pill::-webkit-scrollbar { display: none; }
+  .nav-pill a { min-height: 44px; padding: 0 12px; font-size: 0; gap: 0; }
   .ag-grid { grid-template-columns: repeat(4,1fr); }
-  .r-nav { padding: 0 16px; }
+  .r-nav { padding: 0 14px; }
+  .nav-links { gap: 8px; }
+  .nav-cta { padding: 8px 12px !important; font-size: 13px !important; }
 }
 @media (max-width: 640px) {
   .r-hero { padding: 96px 18px 64px; }

@@ -18,14 +18,19 @@ export function AppShell({
   const isMarketingHome = pathname === '/';
 
   if (isMarketingHome) {
-    return <ErrorBoundary>{children}</ErrorBoundary>;
+    return (
+      <>
+        {nav}
+        <ErrorBoundary>{children}</ErrorBoundary>
+      </>
+    );
   }
 
   return (
     <>
       {bg}
       {nav}
-      <main className="mx-auto max-w-5xl px-4 pb-24 pt-6">
+      <main className="mx-auto max-w-5xl px-4 pb-24 pt-24">
         <ErrorBoundary>{children}</ErrorBoundary>
       </main>
       {footer}

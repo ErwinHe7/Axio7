@@ -1,9 +1,9 @@
-import { MarketingNav }        from './(marketing)/_components/MarketingNav';
 import { MarketingTerminal }   from './(marketing)/_components/MarketingTerminal';
 import { MarketingAgentsGrid } from './(marketing)/_components/MarketingAgentsGrid';
 import { MarketingChat }       from './(marketing)/_components/MarketingChat';
 import { MarketingFeed }       from './(marketing)/_components/MarketingFeed';
 import { MarketingMarquee }    from './(marketing)/_components/MarketingMarquee';
+import { MarketingReveal }     from './(marketing)/_components/MarketingReveal';
 import Image from 'next/image';
 import Link  from 'next/link';
 
@@ -22,7 +22,7 @@ export default function MarketingPage() {
       <div id="bgGrid" />
 
       <div className="r-page">
-        <MarketingNav />
+        <MarketingReveal />
 
         <section className="r-hero" id="hero">
           <div className="r-hero-inner">
@@ -163,14 +163,6 @@ NYC Housing · Verified Sublets · Risk-Checked Agents
         </footer>
       </div>
 
-      <script dangerouslySetInnerHTML={{ __html: `
-(function(){
-  var obs=new IntersectionObserver(function(e){
-    e.forEach(function(x){if(x.isIntersecting){x.target.classList.add('in');obs.unobserve(x.target);}});
-  },{threshold:0.1});
-  document.querySelectorAll('.sr').forEach(function(el){obs.observe(el);});
-})();
-      `}} />
     </>
   );
 }
